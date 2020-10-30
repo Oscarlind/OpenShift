@@ -1,0 +1,10 @@
+---
+### Add and/or update variables as seen fit. These are just default values. 
+ 
+ 
+ 
+smoke_test_ns: smoke-test
+smoke_test_pod: smoke-pod
+smoke_test_image: quay.io/redhatworkshops/bgd:latest
+smoke_test_pvc: smoke-pvc
+smoke_test_pvc2: smoke-pvc2

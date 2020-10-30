@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ smoke_test_pod }}
+  namespace: {{ smoke_test_ns }}
+spec:
+  containers:
+  - name: www
+    image: {{ smoke_test_image }}

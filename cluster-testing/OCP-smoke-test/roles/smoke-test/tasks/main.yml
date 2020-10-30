@@ -1,0 +1,34 @@
+---
+ 
+- name: Creating smoke-test namespace
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'smoke-test-namespace.yml') }}"
+    validate_certs: no
+ 
+- name: Testing X Storage (Creating PVC for e.g. NFS, vSphere or other storage
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'smoke-test-pvc.yml') }}"
+    validate_certs: no
+ 
+- name: Testing X Storage (Creating PVC for e.g. NFS, vSphere or other storage
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'smoke-test-pvc.yml') }}"
+    validate_certs: no
+ 
+- name: Pulling image from external (X) registry
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'smoke-test-image-registry.yml') }}"
+    validate_certs: no
+ 
+- name: Checking cluster version and oc client
+  command: oc version
+  register: oc_version
+ 
+- name: Printing oc version and cluster version
+  debug:
+    var: oc_version.stdout_lines
+
