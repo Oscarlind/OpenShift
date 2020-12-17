@@ -32,11 +32,11 @@ Default variables are set in defaults/main.yml
 
 Variables in use currently are:
 
-smoke_test_ns: Name of namespace being created
-smoke_test_pod: Name of the test pod
-smoke_test_image: URL to the image being pulled
-smoke_test_pvc: Name of the pvc being created
-smoke_test_pvc2: Name of the second pvc being created
+* smoke_test_ns: Name of namespace being created
+* smoke_test_pod: Name of the test pod
+* smoke_test_image: URL to the image being pulled
+* smoke_test_pvc: Name of the pvc being created
+* smoke_test_pvc2: Name of the second pvc being created
 
 Dependencies
 ------------
