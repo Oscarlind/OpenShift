@@ -45,7 +45,7 @@ Dependencies
 Example Playbook
 ----------------
 
----
+```---
 - name: smoke-test
   hosts: localhost
   become: yes
@@ -53,7 +53,7 @@ Example Playbook
     smoke_test_ns: smoke-testing
   roles:
   - ocp-smoke-test
-
+```
 
 License
 -------
