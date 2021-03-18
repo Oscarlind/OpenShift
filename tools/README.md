@@ -50,7 +50,7 @@ Usage: surface-scanner.sh [options]
 
 Options:
     -s      Performs a surface scan of the cluster - reports the results and sends it to /tmp/ClusterReport.txt
-    -h		Prints this messages and exits.
+    -h		  Prints this messages and exits.
 
 ```
 
