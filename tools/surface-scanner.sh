@@ -250,13 +250,14 @@ LONG_PODS=0
 
          # Print data for manipulation
          oc get pods --all-namespaces -o=custom-columns=NAMESPACE:.metadata.namespace,POD:metadata.name,AGE:.metadata.creationTimestamp >> pod-date.txt
-
+         if [ $LONG_PODS -gt 0 ]; then
          # Create a new column with the AGE of the pods
-         awk -v OFS='\t' 'BEGIN { printf "%s\n", "AGE"} {print $1}' tmp-test.txt > tmp-test2.txt
+           awk -v OFS='\t' 'BEGIN { printf "%s\n", "AGE"} {print $1}' tmp-test.txt > tmp-test2.txt
          # Replace the third column in the pod-date file with the newly created column
          # Warning - messy formatting
-         awk  'FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' tmp-test2.txt pod-date.txt | tee -a ${REPORT}
-        
+           awk  'FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' tmp-test2.txt pod-date.txt | tee -a ${REPORT}
+         else
+           echo "No long running pods found." >> ${REPORT}
          if [ ${LONG_PODS} -gt 1 ]; then
            echo -e "${RED} Amount of long running pods: ${NO_COL} ${LONG_PODS}"
          else
@@ -308,7 +309,9 @@ podCheck
 
 workloadAge
 echo ""
-echo -e "${GREEN} Scan completed. For details, read ${REPORT}${NO_COL}"
+echo -e "════════════════════════════════════╣ $GREEN Scan completed${NO_COL}. ╠════════════════════════════════════"
+echo ""
+echo -e "                         ${RED} For details, read ${REPORT}${NO_COL}"
 }
 
 
