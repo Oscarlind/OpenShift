@@ -259,8 +259,10 @@ LONG_PODS=0
          else
            echo "No long running pods found." >> ${REPORT}
          if [ ${LONG_PODS} -gt 1 ]; then
+           echo ""
            echo -e "${RED} Amount of long running pods: ${NO_COL} ${LONG_PODS}"
          else
+           echo ""
            echo -e "${GREEN} Found no long running pods in the cluster.${NO_COL}"
          fi
          # Removing the temp file
