@@ -255,7 +255,7 @@ LONG_PODS=0
            awk -v OFS='\t' 'BEGIN { printf "%s\n", "AGE"} {print $1}' tmp-test.txt > tmp-test2.txt
          # Replace the third column in the pod-date file with the newly created column
          # Warning - messy formatting
-           awk  'FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' tmp-test2.txt pod-date.txt | tee -a ${REPORT}
+           awk  'FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' tmp-test2.txt pod-date.txt | column -t | tee -a ${REPORT}
          else
            echo "No long running pods found." >> ${REPORT}
          if [ ${LONG_PODS} -gt 1 ]; then
