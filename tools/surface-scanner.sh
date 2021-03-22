@@ -228,12 +228,12 @@ function workloadAge() {
          echo ""
          printf "\nPODS & RUNTIME: \n" >> ${REPORT}
 
-# First get the cut off date
-         C_DATE=$(date -d "+9days $(date +%F) day" +%s)
-
+# First set the date variables
+         C_DATE=$(date -d "-9days $(date +%F) day" +%s)
+         CU_DATE=$(date +%s)
+         CUT_DATE=$((CU_DATE-$C_DATE))
 # Get age of pods
          POD_DATE=$(oc get pods --all-namespaces -o=custom-columns=NAMESPACE:.metadata.namespace,POD:metadata.name,AGE:.metadata.creationTimestamp | awk '{ print $3 }' | sed 's/\T.*$//' | sed 's/AGE//')
-
 
          for pod in $POD_DATE; do
            date -d $pod +%s >> tmp-pod-date.txt
@@ -242,10 +242,9 @@ function workloadAge() {
 LONG_PODS=0
 
          for line in $(cat tmp-pod-date.txt); do
-           if [ $line -ge ${C_DATE} ]; then
+           if [ $((line+$CUT_DATE)) -lt ${C_DATE} ]; then
              LONG_PODS=$((LONG_PODS+1))
-       #    else
-       #      echo "bye"
+             echo $(date -d @$line +%F) "INSPECTION RECOMMENDED" >> tmp-test.txt
            fi
          done
 
@@ -258,7 +257,8 @@ LONG_PODS=0
          # Print information to report - Needs improvement
          oc get pods --all-namespaces -o=custom-columns=NAMESPACE:.metadata.namespace,POD:metadata.name,AGE:.metadata.creationTimestamp >> ${REPORT}
 
-                 
+         # Removing the temp file
+         rm -f tmp-pod-date.txt                
 }
 #################################################################
 # Calls all functions to perform a scan
