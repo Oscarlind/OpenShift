@@ -244,7 +244,7 @@ LONG_PODS=0
          for line in $(cat tmp-pod-date.txt); do
            if [ $((line+$CUT_DATE)) -lt ${C_DATE} ]; then
              LONG_PODS=$((LONG_PODS+1))
-#             echo $(date -d @$line +%F) "INSPECTION RECOMMENDED" >> tmp-test.txt
+             echo $(date -d @$line +%F) >> tmp-test.txt
            fi
          done
 
@@ -254,8 +254,16 @@ LONG_PODS=0
            echo -e "${GREEN} Found no long running pods in the cluster.${NO_COL}"
          fi
 
-         # Print information to report - Needs improvement
-         oc get pods --all-namespaces -o=custom-columns=NAMESPACE:.metadata.namespace,POD:metadata.name,AGE:.metadata.creationTimestamp >> ${REPORT}
+         # Print data for manipulation
+         oc get pods --all-namespaces -o=custom-columns=NAMESPACE:.metadata.namespace,POD:metadata.name,AGE:.metadata.creationTimestamp >> pod-date.txt
+
+         # Create a new column with the AGE of the pods
+         awk -v OFS='\t' 'BEGIN { printf "%s\n", "AGE"} {print $1}' tmp-test.txt > tmp-test2.txt
+         # Replace the third column in the pod-date file with the newly created column
+         # Warning - messy formatting
+         awk  'FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' tmp-test2.txt pod-date.txt >> ${REPORT}
+         # Removing the temp file
+         rm -f tmp-pod-date.txt pod-date.txt tmp-test.txt tmp-test2.txt
 
          # Removing the temp file
          rm -f tmp-pod-date.txt                
