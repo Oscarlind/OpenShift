@@ -27,6 +27,8 @@ The tool is created for OpenShift clusters and thus requires the OC client to be
 
 The tool does a check to see if these requirements are fullfilled during start.
 
+Tested on both 3.11 and 4.x
+
 Options
 --------------
 

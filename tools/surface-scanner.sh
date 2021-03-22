@@ -244,7 +244,7 @@ LONG_PODS=0
          for line in $(cat tmp-pod-date.txt); do
            if [ $((line+$CUT_DATE)) -lt ${C_DATE} ]; then
              LONG_PODS=$((LONG_PODS+1))
-             echo $(date -d @$line +%F) "INSPECTION RECOMMENDED" >> tmp-test.txt
+#             echo $(date -d @$line +%F) "INSPECTION RECOMMENDED" >> tmp-test.txt
            fi
          done
 
