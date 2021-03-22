@@ -248,12 +248,6 @@ LONG_PODS=0
            fi
          done
 
-         if [ ${LONG_PODS} -gt 1 ]; then
-           echo "Amount of long running pods: ${LONG_PODS}"
-         else
-           echo -e "${GREEN} Found no long running pods in the cluster.${NO_COL}"
-         fi
-
          # Print data for manipulation
          oc get pods --all-namespaces -o=custom-columns=NAMESPACE:.metadata.namespace,POD:metadata.name,AGE:.metadata.creationTimestamp >> pod-date.txt
 
@@ -261,12 +255,16 @@ LONG_PODS=0
          awk -v OFS='\t' 'BEGIN { printf "%s\n", "AGE"} {print $1}' tmp-test.txt > tmp-test2.txt
          # Replace the third column in the pod-date file with the newly created column
          # Warning - messy formatting
-         awk  'FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' tmp-test2.txt pod-date.txt >> ${REPORT}
+         awk  'FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' tmp-test2.txt pod-date.txt | tee -a ${REPORT}
+        
+         if [ ${LONG_PODS} -gt 1 ]; then
+           echo -e "${RED} Amount of long running pods: ${NO_COL} ${LONG_PODS}"
+         else
+           echo -e "${GREEN} Found no long running pods in the cluster.${NO_COL}"
+         fi
          # Removing the temp file
          rm -f tmp-pod-date.txt pod-date.txt tmp-test.txt tmp-test2.txt
 
-         # Removing the temp file
-         rm -f tmp-pod-date.txt                
 }
 #################################################################
 # Calls all functions to perform a scan
