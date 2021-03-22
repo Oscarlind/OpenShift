@@ -85,24 +85,25 @@ function apiCheck() {
 # Prints a warning or pass and reports to the report file
 #################################################################
 function nodeCheck() {
+
+# Setting compute as variables
+CPU=$(oc adm top node | awk '{print $3}' | sed 's/%//g' | sed '1d')
+MEM=$(oc adm top node | awk '{print $5}' | sed 's/%//g' | sed '1d')
+
          echo "--------------------------------------------------"
          echo -e "${BLUE} Checking node resource usage...${NO_COL}"
          printf "\nNODE RESOURCE USAGE:\n" >> ${REPORT}
          oc adm top node >> ${REPORT}
-         oc adm top node | awk '{print $3}' > tmp-node-cpu.txt
-         oc adm top node | awk '{print $5}' > tmp-node-mem.txt
-         # Removing all but the numbers we need
-         sed -i 's/%//g' tmp-node-cpu.txt tmp-node-mem.txt
-         sed -i '1d' tmp-node-cpu.txt tmp-node-mem.txt
          # Scan the files for a eq or gt value
-         if ! awk '{exit $1 >= 85}' tmp-node-cpu.txt; then
+
+         echo $CPU | if ! awk '{exit $1 >= 85}'; then
              echo -e "${RED} CPU usage of over 85% detected! - More information in ${REPORT}${NO_COL}"
              NODE_RESULT="FAILED"
          else 
              echo ""
              echo -e "${BLUE} CPU usage under 85%.${NO_COL}"
          fi
-         if ! awk -v x=85 '{exit $1 >= x}' tmp-node-mem.txt; then
+         echo $MEM | if ! awk -v x=85 '{exit $1 >= x}'; then
              echo -e "${RED} Memory usage of over 85% detected! - More information in ${REPORT}${NO_COL}"
              NODE_RESULT="FAILED"
          else
@@ -115,8 +116,6 @@ function nodeCheck() {
          else
             echo -e "${GREEN} PASS - Node usage is under 85%${NO_COL}"
          fi
-         # Removing temporary node-files
-         rm -f tmp-node-*
 }
 #################################################################
 # Looks for namespaces that holds no workload
