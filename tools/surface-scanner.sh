@@ -257,6 +257,7 @@ LONG_PODS=0
            awk  'FNR==NR{a[NR]=$1;next}{$3=a[FNR]}1' tmp-test2.txt pod-date.txt | column -t | tee -a ${REPORT}
          else
            echo "No long running pods found." >> ${REPORT}
+         fi
          if [ ${LONG_PODS} -gt 1 ]; then
            echo ""
            echo -e "${RED} Amount of long running pods: ${NO_COL} ${LONG_PODS}"
