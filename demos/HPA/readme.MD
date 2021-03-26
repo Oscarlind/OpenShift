@@ -38,7 +38,7 @@ Step 3 - The Horizontal Auto Scaler
 ------------
 The horizontal pod autoscaler works by querying configured metrics on the resource, often deployment or deploymentconfig, and scales it up or down according to its configuration.
 
-More reading can be found here: https://docs.openshift.com/container-platform/4.7/nodes/pods/nodes-pods-autoscaling.html
+More information can be found here: https://docs.openshift.com/container-platform/4.7/nodes/pods/nodes-pods-autoscaling.html
 
 To create the HPA resource, run:
 
@@ -54,7 +54,9 @@ Before the HPA takes effect, it needs to collect enough metrics in order to calc
 
 `oc get hpa hpa-demo`
 
-To see the current status. Until it is ready you will most likely end up seeing <unknown/60%> under TARGETS.
+To see the current status. 
+
+Until it is ready you will most likely end up seeing <unknown/50%> under TARGETS.
 
 By running: 
 
