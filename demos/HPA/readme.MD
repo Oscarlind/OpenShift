@@ -46,7 +46,7 @@ To create the HPA resource, run:
 
 NOTE: The yaml is set to dc name of hpa-demo. If you have used another name, either change the yaml or run:
 
-`oc autoscale dc/<NAME> --min 1 --max 5 --cpu-percent=60`
+`oc autoscale dc/<NAME> --min 1 --max 5 --cpu-percent=50`
 
 instead.
 
