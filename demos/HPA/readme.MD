@@ -6,10 +6,30 @@ HPA or Horizontal Auto Scaler is a function that allows for automated scaling of
 
 More information can be found here: https://docs.openshift.com/container-platform/4.7/nodes/pods/nodes-pods-autoscaling.html
 
-Step 1 - The Namespace and the Application
+Step 1 - The Namespace and the Limitrange
 ------------
-In order to demonstrate the HPA functionality we need an application as well as a namespace to host it.
-An example application taken from the OpenShift documentation is used here as <code> <i> example-app.yaml</i> </code>
+In order to demonstrate the HPA functionality we need to have a namespace to host our application and also a limit range for the HPA to work together with.
+
+- **NOTE:** Instead of using a LimitRange we could put requests and limits directly in the deployment. The advantage of using a LimitRange is that we can have it determine a default for all deployments that we do not set it ourselves.
+
+Create the namespace:
+
+`oc new-project hpa-demo`
+
+Create the LimitRange
+
+`oc apply -f limitrange.yaml`
+
+A limit range is an object that can be used to restrict resource consumtion in projects/namespaces.
+
+When set, it requires future resource requests, e.g. deployments and deploymentconfigs to evaluate against the limitRange in order to see if the request should be accepted or not.
+
+For more information: https://docs.openshift.com/container-platform/4.7/nodes/clusters/nodes-cluster-limit-ranges.html
+
+Step 2 - Creating the Application
+------------
+In order to demonstrate the HPA functionality we need an application to work with.
+An example application taken from the OpenShift documentation is used here as  *example-app.yaml*
 
 https://docs.openshift.com/container-platform/4.7/monitoring/managing-metrics.html#deploying-a-sample-service_managing-metrics
 
@@ -28,19 +48,6 @@ Verify the route by running:
 Ensure that the metrics endpoint is up:
 
 `curl $(oc get route --no-headers | awk '{print $2}')/metrics`
-
-Step 2 - Creating the LimitRange
-------------
-
-Before we can start working with our auto-scaler we want to create ourselves a LimitRange to work with.
-
-`oc apply -f limitrange.yaml -n hpa-demo`
-
-A limit range is an object that can be used to restrict resource consumtion in projects/namespaces.
-
-When set, it requires future resource requests, e.g. deployments and deploymentconfigs to evaluate against the limitRange in order to see if the request should be accepted or not.
-
-For more information: https://docs.openshift.com/container-platform/4.7/nodes/clusters/nodes-cluster-limit-ranges.html
 
 Step 3 - The Horizontal Auto Scaler
 ------------
@@ -70,6 +77,10 @@ By running:
 `oc describe hpa hpa-demo` 
 
 Any potential errors will be visible. 
+
+It will take a few minutes before the HPA has gathered the initial metrics. To keep watch you can run:
+
+`watch oc describe hpa hpa-demo`
 
 
 Step 4 - Generate load
