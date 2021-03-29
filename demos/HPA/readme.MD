@@ -2,11 +2,35 @@ HPA - Horizontal Auto Scaler
 =========
 Short demo on the HPA function in K8s/OCP
 
-Step 1 - The project and limitRange
-------------
-First, create a project.
+HPA or Horizontal Auto Scaler is a function that allows for automated scaling of applications based on CPU, Memory or even custom metrics. Below is an example of how to utilize the function on an example application based on CPU load.
 
-`oc new-project hpa-demo`
+More information can be found here: https://docs.openshift.com/container-platform/4.7/nodes/pods/nodes-pods-autoscaling.html
+
+Step 1 - The Namespace and the Application
+------------
+In order to demonstrate the HPA functionality we need an application as well as a namespace to host it.
+An example application taken from the OpenShift documentation is used here as <code> <i> example-app.yaml</i> </code>
+
+https://docs.openshift.com/container-platform/4.7/monitoring/managing-metrics.html#deploying-a-sample-service_managing-metrics
+
+`oc apply -f example-app.yaml`
+
+This will gives us a example application with a /metrics endpoint
+
+Lets expose the application as well by running:
+
+`oc expose svc hpa-demo`
+
+Verify the route by running:
+
+`curl $(oc get route --no-headers | awk '{print $2}')`
+
+Ensure that the metrics endpoint is up:
+
+`curl $(oc get route --no-headers | awk '{print $2}')/metrics`
+
+Step 2 - Creating the LimitRange
+------------
 
 Before we can start working with our auto-scaler we want to create ourselves a LimitRange to work with.
 
@@ -18,22 +42,6 @@ When set, it requires future resource requests, e.g. deployments and deploymentc
 
 For more information: https://docs.openshift.com/container-platform/4.7/nodes/clusters/nodes-cluster-limit-ranges.html
 
-Step 2 - Creating the application
-------------
-
-Here we can now create our example application.
-#TODO# Choose an application to use
-
-`oc new-app --as-deployment-config <URL> --name=hpa-demo`
-
-#TODO# Change into finished dc yaml
-
-We will also expose our application in order to make it available for scraping at /metrics.
-
-`oc expose svc hpa-demo` 
-
-
-
 Step 3 - The Horizontal Auto Scaler
 ------------
 The horizontal pod autoscaler works by querying configured metrics on the resource, often deployment or deploymentconfig, and scales it up or down according to its configuration.
@@ -43,12 +51,6 @@ More information can be found here: https://docs.openshift.com/container-platfor
 To create the HPA resource, run:
 
 `oc apply -f hpa.yaml` 
-
-NOTE: The yaml is set to dc name of hpa-demo. If you have used another name, either change the yaml or run:
-
-`oc autoscale dc/<NAME> --min 1 --max 5 --cpu-percent=50`
-
-instead.
 
 Before the HPA takes effect, it needs to collect enough metrics in order to calculate a current status. Run:
 
@@ -60,18 +62,15 @@ Until it is ready you will most likely end up seeing <unknown/50%> under TARGETS
 
 ```
 NAME       REFERENCE                   TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
-hpa-demo   DeploymentConfig/hpa-demo   <unknown>/50%   1         5         0          3s
+hpa-demo   Deployment/hpa-demo   <unknown>/50%   1         5         0          3s
 ```
 
 By running: 
 
 `oc describe hpa hpa-demo` 
 
-Any potential errors will be visible.
+Any potential errors will be visible. 
 
-Redeploy the applciation in order to ensure that the HPA is taken into effect:
-
-`oc rollout latest dc/hpa-demo`
 
 Step 4 - Generate load
 ------------
