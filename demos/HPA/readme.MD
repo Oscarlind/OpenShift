@@ -90,11 +90,7 @@ Now that the HPA is set-up, we will need to generate load on the pod to test the
 Open another terminal and
 rsh into the pod:
 
-`oc get pods -n hpa-demo`
-
-&
-
-`oc rsh <pod-name>`
+`oc rsh $(oc get pods --no-headers -n hpa-demo | awk '{print $1}')` 
 
 run this to generate some artificial CPU load:
 
