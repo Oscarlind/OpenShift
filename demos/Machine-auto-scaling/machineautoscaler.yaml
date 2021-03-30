@@ -6,7 +6,7 @@ metadata:
   namespace: openshift-machine-api
 spec:
   minReplicas: 1
-  maxReplicas: 2
+  maxReplicas: 3
   scaleTargetRef:
     apiVersion: machine.openshift.io/v1beta1
     kind: MachineSet
