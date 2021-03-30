@@ -53,3 +53,15 @@ Let it run while we create some load on the cluster.
 Step 4 - Generate load
 ------------
 In order to get the Cluster Autoscaler to provision new nodes for us, we need to generate some load in the cluster.
+
+Create a namespace to host our load:
+
+`oc new-project auto-scale`
+
+Apply the load:
+
+```
+for i in {1..25}; do
+sed s/change/$i/ load.yaml | oc create -f -
+done
+```
