@@ -69,7 +69,7 @@ Until it is ready you will most likely end up seeing <unknown/50%> under TARGETS
 
 ```
 NAME       REFERENCE                   TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
-hpa-demo   Deployment/hpa-demo   <unknown>/50%   1         5         0          3s
+hpa-demo   Deployment/hpa-demo   <unknown>/50%            1         5         0        3s
 ```
 
 By running: 
