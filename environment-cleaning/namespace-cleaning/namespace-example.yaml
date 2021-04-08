@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: example-namespace
+  annotations:
+    openshift.io/description: ""
+    openshift.io/display-name: ""
+    openshift.io/requester: system:admin
+    openshift.io/sa.scc.mcs: s0:c25,c10
+    openshift.io/sa.scc.supplemental-groups: 1000620000/10000
+    openshift.io/sa.scc.uid-range: 1000620000/10000
+  labels:
+    creation-date: 2021-03-24
+spec:
+  finalizers:
+  - kubernetes
+

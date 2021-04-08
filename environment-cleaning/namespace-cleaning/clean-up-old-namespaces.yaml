@@ -1,0 +1,56 @@
+# 1. Create a service account
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: clean-old-namespaces
+  namespace: default
+
+# 2. Create a role
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: old-namespaces-cleaner-role
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["list", "delete"]
+
+# 3. Attach the role to the SA
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: old-namespaces-cleaner-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: old-namespaces-cleaner-role
+subjects:
+- kind: ServiceAccount
+  name: clean-old-namespaces
+  namespace: default
+
+# 4. Create a cronjob to clean namespaces older than X days/weeks/months. The command looks for a value that is the date one week ago from the custom label creation-date.
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cleanup
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          serviceAccountName: clean-old-namespaces
+          containers:
+          - name: kubectl-runner
+            image: bitnami/kubectl:latest
+            command: ["sh", "-c", "kubectl delete namespace $(kubectl get namespace -l=creation-date=$(date -d '1 week ago' '+%Y-%m-%d') --no-headers | awk '{print $1}')"]
+          restartPolicy: Never
