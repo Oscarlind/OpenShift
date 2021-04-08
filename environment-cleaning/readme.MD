@@ -7,7 +7,7 @@ There are different ways of ensuring that your environment keeps from getting bo
 
 Removing namespaces after X time
 ------------
-In some cases it can be a good idea to clear out certain namespaces in, for example, testing clusters. This due to keep them being for development and testing as well as ensuring that the cluster resources are not being bogged down by old unused projects. This is an example of how this can be achieved by using custom labels and a cronjob.
+It can be a good idea to clear out certain namespaces in, for example, testing clusters. By doing this we can ensure that their main purpose stays the same - no testing/PoC:ing ending up as a full time used service and just as important making sure that the cluster resources are not being held by old unused projects. This is an example of how this can be achieved by using custom labels and a cronjob.
 
 Command being used is:
 
@@ -22,7 +22,7 @@ To keep the number of **Completed** and **Failed** pods down, we can keep a cron
 
 The command being run in the container is this:
 
-`kubectl delete pods --all-namespaces --field-selector=status.phase=Succeeded | awk 'match($6,/[1-9]+d/)' | grep -v -e 'default' -e 'openshift' -e 'kube'`
+`kubectl delete pods --all-namespaces --field-selector=status.phase=Failed | awk 'match($6,/[1-9]+d/)' | grep -v -e 'default' -e 'openshift' -e 'kube'`
 
 This command looks for pods in all namespaces with the **Failed** status, prints the 6th column which is the **Age** one and only takes the pods with the specified age in **d** (for days). Then it reverse greps the default namespaces in OpenShift to ensure we are not deleting any pods in those. 
 
