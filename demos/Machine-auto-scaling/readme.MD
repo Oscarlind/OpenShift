@@ -19,7 +19,7 @@ First we will be creating our ClusterAutoscaler.
 
 `oc apply -f clusterautoscaler.yaml`
 
-Important: In the Cluster Autoscaler resource, we define a max amount of nodes. This node count includes control plane node, aka masters. Therefore in this demo we are setting it to 6. This means that the cluster can house a maximum of 6 nodes. Three masters and three workers.
+> **Important**: In the Cluster Autoscaler resource, we define a max amount of nodes. This node count includes control plane node, aka masters. Therefore in this demo we are setting it to 6. This means that the cluster can house a maximum of 6 nodes. Three masters and three workers.
 
 
 Step 2 - Creating the MachineAutoscaler

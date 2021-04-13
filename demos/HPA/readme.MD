@@ -10,7 +10,7 @@ Step 1 - The Namespace and the Limitrange
 ------------
 In order to demonstrate the HPA functionality we need to have a namespace to host our application and also a limit range for the HPA to work together with.
 
-- **NOTE:** Instead of using a LimitRange we could put requests and limits directly in the deployment. The advantage of using a LimitRange is that we can have it determine a default for all deployments that we do not set it ourselves.
+>- **NOTE:** Instead of using a LimitRange we could put requests and limits directly in the deployment. The advantage of using a LimitRange is that we can have it determine a default for all deployments that we do not set it ourselves.
 
 Create the namespace:
 
