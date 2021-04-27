@@ -15,7 +15,7 @@ Step 1 - Installing Sealed Secrets
 ------------
 First we will install our controller. This is the entity carrying a private key (master key) that can decrypt sealed-secrets for us.
 
-`oc apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.15.0/controller.yaml`
+`oc apply -k sealed-secrets`
 
 And our binary. We will need it to encrypt our secrets.
 
