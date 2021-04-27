@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    openshift.io/display-name: "sealed-secret demo"
+    openshift.io/requester: sealed-demo
+  name: demo-namespace
+spec:
+  finalizers:
+  - kubernetes
