@@ -142,3 +142,18 @@ To avoid installing the controller in the **kube-system** namespace and instead 
 This change in namespace affects a few things that I will address.
 
 * Kubeseal wont find the certififcate unless we specify the path to the controller
+
+First, lets get rid of the previous deployment.
+
+`oc delete -k sealed-secrets`
+
+and install it in our dedicated namespace, sealed-secrets.
+
+`oc apply -k sealed-secrets/overlays/isolation`
+
+> NOTE: This solution was originally found here: https://github.com/redhat-cop/rhel-edge-automation-arch/tree/main/openshift/gitops/manifests/configs/sealed-secrets
+
+What this does is:
+
+1. Creates the **sealed-secrets** namespace
+2. Deploys the controller and the other resources in that namespace
