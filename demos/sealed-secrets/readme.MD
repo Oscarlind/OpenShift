@@ -139,11 +139,18 @@ Step 4 - [OPTIONAL] Installing Sealed-Secrets in a custom namespace (WIP)
 
 To avoid installing the controller in the **kube-system** namespace and instead doing it in a dedicated namespace, we can use **Kustomize** to ensure the controller gets deployed where we want it to.
 
-This change in namespace affects a few things that I will address.
+This change in namespace do affect how we will create our sealed-secrets.
+With the controller deployed in another namespace than kube-system, kubeseal wont find the certififcate unless we specify the path to the controller, in other words, the namespace where we decided to deploy it to. This means that the command we used earlier: 
 
-* Kubeseal wont find the certififcate unless we specify the path to the controller
+`kubeseal -o yaml <demo-secret.yaml > sealed-demo-secret.yaml` 
 
-First, lets get rid of the previous deployment.
+will fail with.
+
+```
+error: cannot fetch certificate: services "sealed-secrets-controller" not found
+``` 
+
+I'll address this point later on. First, lets get rid of the previous deployment.
 
 `oc delete -k sealed-secrets`
 
@@ -157,3 +164,4 @@ What this does is:
 
 1. Creates the **sealed-secrets** namespace
 2. Deploys the controller and the other resources in that namespace
+
