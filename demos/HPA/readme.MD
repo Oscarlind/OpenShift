@@ -39,7 +39,7 @@ This will gives us a example application with a /metrics endpoint
 
 Lets expose the application as well by running:
 
-`oc expose svc hpa-demo`
+`oc expose svc prometheus-example-app`
 
 Verify the route by running:
 
