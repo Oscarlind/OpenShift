@@ -134,7 +134,7 @@ Here we can see two interesting things. First of we can see that the secret has 
 
 The second is that we can see **ownerReferences** in the yaml definition, telling us that the secret is owned by a sealed-secret called demo-secret.
 
-Step 4 - [OPTIONAL] Installing Sealed-Secrets in a custom namespace (WIP)
+Step 4 - [OPTIONAL] Installing Sealed-Secrets in a custom namespace
 ------------
 
 To avoid installing the controller in the **kube-system** namespace and instead doing it in a dedicated namespace, we can use **Kustomize** to ensure the controller gets deployed where we want it to.
@@ -165,3 +165,45 @@ What this does is:
 1. Creates the **sealed-secrets** namespace
 2. Deploys the controller and the other resources in that namespace
 
+As mentioned when trying to encrypt (seal) a secret using kubeseal, we will now be getting an error. This is because we now have to specify the path to the controller in order to fetch the certificate.
+
+> NOTE: We can also fetch locally and tell **Kubeseal** to point at a file.
+
+In this example we have deployed the controller in the *sealed-secrets* namespace and to create a sealed-secret we would specify:
+
+`kubeseal --controller-namespace=sealed-secrets -o yaml <demo-secret.yaml > sealed-demo-secret.yaml`
+
+Now that we specify where to go and fetch the certificate, the command will run without errors and produce our sealed-secret.
+
+Step 5 - [OPTIONAL] Simplifying the process
+------------
+Now that we have seen how Sealed-Secrets are deployed and used, we can start to look at how we can simplify the process from a user PoV.
+
+Once the controller is deployed and a user wants to make use of it, he or she needs to:
+
+1. Create a secret definition. For example by doing a dry-run and include the namespace, content for the secret
+2. Encrypt (Seal) the secret using kubeseal and define the location for the controller and the secret definition we created in the previous step 
+
+This is perhaps not the most user-friendly way of working, and is also error-prone due to typos. A suggested way of working with this is to automate the process of creating both the secret and the sealed-secret.
+
+For this reason I created this script: https://github.com/Oscarlind/OpenShift/tree/main/tools/sealed-secrets/sealed-secrets.sh
+
+It's usage is simple. Just run it with `sh sealed-secrets.sh [OPTIONS]`
+
+Options available are:
+
+```
+-s     Name of the secret, will be converted to lowercase
+-n     The namespace to apply the secret to
+-f     The file containing the secret data
+-h     Print this message and exit 
+```
+
+In our example, we can run it like this:
+
+```bash
+[olindhol ~]$ sh sealed-secrets.sh -s test-SECRET -n demo-namespace -f demo-file
+
+Sealed-Secret: test-secret.yml has now been created. You can add it to git
+
+```
