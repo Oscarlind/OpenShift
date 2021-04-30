@@ -1,8 +1,8 @@
-HPA - Horizontal Auto Scaler
+HPA - Horizontal Pod Auto Scaler
 =========
 Short demo on the HPA function in K8s/OCP
 
-HPA or Horizontal Auto Scaler is a function that allows for automated scaling of applications based on CPU, Memory or even custom metrics. Below is an example of how to utilize the function on an example application based on CPU load.
+HPA or Horizontal Pod Auto Scaler is a function that allows for automated scaling of applications based on CPU, Memory or even custom metrics. Below is an example of how to utilize the function on an example application based on CPU load.
 
 More information can be found here: https://docs.openshift.com/container-platform/4.7/nodes/pods/nodes-pods-autoscaling.html
 
@@ -49,7 +49,7 @@ Ensure that the metrics endpoint is up:
 
 `curl $(oc get route --no-headers | awk '{print $2}')/metrics`
 
-Step 3 - The Horizontal Auto Scaler
+Step 3 - The Horizontal Pod Auto Scaler
 ------------
 The horizontal pod autoscaler works by querying configured metrics on the resource, often deployment or deploymentconfig, and scales it up or down according to its configuration.
 
