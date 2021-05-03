@@ -8,7 +8,7 @@ from kubernetes import client, config
 # For OCP resources, use dyn_client instead of 'v1'
 
 # Api check
-#url = 'https://api.cluster-54d4.sandbox965.opentlc.com:6443'
+#url = ''
 #url_ssl = False
 #r = requests.get(url, verify=url_ssl)
 #print(r.status_code)
@@ -46,7 +46,7 @@ def check_empty_namespaces(v1):
 def check_routes(dyn_client):
     all_routes = get_all_routes(dyn_client)
     with requests.Session() as session:
-        response = session.get('https://argocd-prometheus-argo-test.apps.cluster-54d4.sandbox965.opentlc.com', verify=False)
+        response = session.get('<url>', verify=False)
     print(response.status_code)
 
 def get_all_routes(dyn_client):
