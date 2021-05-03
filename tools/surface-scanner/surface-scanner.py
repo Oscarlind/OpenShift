@@ -45,9 +45,10 @@ def check_empty_namespaces(v1):
 # If statement to run with verify=False on non-tls routes?
 def check_routes(dyn_client):
     all_routes = get_all_routes(dyn_client)
-    with requests.Session() as session:
-        response = session.get('<url>', verify=False)
-    print(response.status_code)
+    for route in all_routes:
+        with requests.Session() as session:
+            response = session.get("http://" + route, verify=False)
+        #print(route, response.status_code)
 
 def get_all_routes(dyn_client):
     route_list = []
@@ -60,6 +61,13 @@ def get_endpoint(session, url, ssl=True):
     r = requests.get(url, verify=ssl)
     return r.status_code
 
+# Todo - get only the failed pods
+def get_failed_pods(v1):
+    failed_pods = []
+    response = v1.list_pod_for_all_namespaces()
+    for pod in response.items:
+        print(pod.status.phase)
+
 def main():
     config.load_kube_config()
     k8s_client = config.new_client_from_config()
@@ -67,7 +75,8 @@ def main():
     v1=client.CoreV1Api()
    # print(check_empty_namespaces(v1))
    # print(get_all_routes(dyn_client))
-    check_routes(dyn_client)
+   # check_routes(dyn_client)
+    get_failed_pods(v1)
 
 
 
