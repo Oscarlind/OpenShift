@@ -10,7 +10,7 @@ The ClusterAutoscaler uses MachineAutoscaler's to actually scale up the machines
 ## Overview
 
 <img src="images/machine-scaling-relations.png" alt="scaling"/>
-# Explaination of the relationship between the various resources used in cluster autoscaling.
+# Illustration of the relationship between the various resources used in cluster autoscaling.
 
 More reading can be done here:
 
