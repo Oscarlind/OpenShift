@@ -7,6 +7,11 @@ Once this CRD has been created, the operator will detect it and start looking fo
 
 The ClusterAutoscaler uses MachineAutoscaler's to actually scale up the machines (nodes). This means that to set up a OpenShift cluster that automaticially scales up or down, it needs to be using machines and we need to configure both the ClusterAutoscaler as well as MachineAutoscaler's for each machineset we want.
 
+## Overview
+
+<img src="images/machine-scaling-relations.png" alt="scaling"/>
+# Explaination of the relationship between the various resources used in cluster autoscaling.
+
 More reading can be done here:
 
 https://docs.openshift.com/container-platform/4.7/machine_management/applying-autoscaling.html
