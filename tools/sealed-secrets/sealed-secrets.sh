@@ -7,7 +7,7 @@ HELP() {
 
   echo "This script takes care of the creation of the sealed-secret.yaml file."
   echo 
-  echo "To use, run: 'sh sealed-secret.sh [-s, -n, -f, -e]"
+  echo "To use, run: 'sh sealed-secret.sh [-s, -n, -f]"
   echo 
   echo "options:"
   echo "-s     Name of the secret, will be converted to lowercase"
