@@ -15,7 +15,7 @@ Step 1 - Installing Sealed Secrets
 ------------
 First we will install our controller. This is the entity carrying a private key (master key) that can decrypt sealed-secrets for us.
 
-`oc apply -k sealed-secrets`
+`oc apply -k sealed-secrets/base`
 
 And our binary. We will need it to encrypt our secrets.
 
@@ -152,7 +152,7 @@ error: cannot fetch certificate: services "sealed-secrets-controller" not found
 
 I'll address this point later on. First, lets get rid of the previous deployment.
 
-`oc delete -k sealed-secrets`
+`oc delete -k sealed-secrets/base`
 
 and install it in our dedicated namespace, sealed-secrets.
 
