@@ -69,7 +69,7 @@ then
   echo ""
   echo "Something went wrong, please try again"
   echo ""
-  rm -f secret-prop.yml
+  rm -f secret-prop.yml ${secret_name_lowercase}.yml
 else
   rm -f secret-prop.yml
 echo ""
