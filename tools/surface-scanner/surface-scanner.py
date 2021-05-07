@@ -45,10 +45,14 @@ def check_empty_namespaces(v1):
 # If statement to run with verify=False on non-tls routes?
 def check_routes(dyn_client):
     all_routes = get_all_routes(dyn_client)
+    checked_routes = []
     for route in all_routes:
         with requests.Session() as session:
             response = session.get("http://" + route, verify=False)
-        #print(route, response.status_code)
+            # Funkar att printa ut route, response.status_code men jag vill försöka spara ner det i en lista.
+        checked_routes.append(route + " " + str(response.status_code))
+#    print(checked_routes)
+    return checked_routes
 
 def get_all_routes(dyn_client):
     route_list = []
@@ -64,9 +68,21 @@ def get_endpoint(session, url, ssl=True):
 # Todo - get only the failed pods
 def get_failed_pods(v1):
     failed_pods = []
+    number_of_failed_pods = 0
     response = v1.list_pod_for_all_namespaces()
     for pod in response.items:
-        print(pod.status.phase)
+        if "Failed" in pod.status.phase:
+            failed_pods.append(pod.metadata.namespace + " " + pod.metadata.name + " " + pod.status.phase)
+            number_of_failed_pods +=1
+# These prints have the same format as the bash script uses.
+#            print(pod.metadata.namespace, end=" ")
+#            print(pod.metadata.name, end=" ") 
+#            print(pod.status.phase)
+    print(failed_pods)
+    print(f"Number of failed pods:" + " " + str(number_of_failed_pods))
+    return(failed_pods)
+# Quick check for # of items in list. Need to decide on formatting.
+#    print(len(failed_pods))
 
 def main():
     config.load_kube_config()
@@ -75,7 +91,7 @@ def main():
     v1=client.CoreV1Api()
    # print(check_empty_namespaces(v1))
    # print(get_all_routes(dyn_client))
-   # check_routes(dyn_client)
+    check_routes(dyn_client)
     get_failed_pods(v1)
 
 
