@@ -26,7 +26,7 @@ def get_all_namespaces(v1):
       namespace_list.append(i.metadata.name)
     return namespace_list
 
-
+# Checks for namespaces without pods
 def check_empty_namespaces(v1):
     all_ns = get_all_namespaces(v1)
     empty_ns = []
@@ -51,7 +51,6 @@ def check_routes(dyn_client):
             response = session.get("http://" + route, verify=False)
             # Funkar att printa ut route, response.status_code men jag vill försöka spara ner det i en lista.
         checked_routes.append(route + " " + str(response.status_code))
-#    print(checked_routes)
     return checked_routes
 
 def get_all_routes(dyn_client):
@@ -65,34 +64,35 @@ def get_endpoint(session, url, ssl=True):
     r = requests.get(url, verify=ssl)
     return r.status_code
 
-# Todo - get only the failed pods
+# Todo - get only the failed pods 
+# Should I add a namespace dictionary and nest the pods under each ns?
 def get_failed_pods(v1):
-    failed_pods = []
+    failed_pods = {}
     number_of_failed_pods = 0
     response = v1.list_pod_for_all_namespaces()
     for pod in response.items:
-        if "Failed" in pod.status.phase:
-            failed_pods.append(pod.metadata.namespace + " " + pod.metadata.name + " " + pod.status.phase)
+        if "Running" not in pod.status.phase and "Succeeded" not in pod.status.phase:
+            failed_pods[pod.metadata.name] = [pod.status.phase]
             number_of_failed_pods +=1
-# These prints have the same format as the bash script uses.
-#            print(pod.metadata.namespace, end=" ")
-#            print(pod.metadata.name, end=" ") 
-#            print(pod.status.phase)
-    print(failed_pods)
     print(f"Number of failed pods:" + " " + str(number_of_failed_pods))
     return(failed_pods)
-# Quick check for # of items in list. Need to decide on formatting.
-#    print(len(failed_pods))
+
+
+#def node_check(v1):
+#    response = v1.read_node_status("node-name")
+#    print(response)
 
 def main():
     config.load_kube_config()
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
-   # print(check_empty_namespaces(v1))
-   # print(get_all_routes(dyn_client))
-    check_routes(dyn_client)
-    get_failed_pods(v1)
+    #print(check_empty_namespaces(v1))
+    #print(get_all_routes(dyn_client))
+    #print(check_routes(dyn_client))
+    #check_routes(dyn_client)
+    print(get_failed_pods(v1))
+    #print(node_check(v1))
 
 
 
