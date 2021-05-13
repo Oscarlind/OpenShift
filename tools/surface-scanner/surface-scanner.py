@@ -77,10 +77,37 @@ def get_failed_pods(v1):
     print("\n", failed_pods)
     return(failed_pods)
 
+# Convert Ki to Mb and add % of CPU/Mem. For CPU do a check to see how many cores are available/node and
+def node_check(v1):
+    api = client.CustomObjectsApi()
+    cluster_nodes = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
+    master_nodes = []
+    node_count = 0
+    for node in cluster_nodes['items']:
+        if "node-role.kubernetes.io/master" in node['metadata']['labels']:
+            master_nodes.append(node['metadata']['name'])
+            node_count +=1
+            print("Name: %s\tNode Type: %s\tCPU: %s\tMemory: %s" % (node['metadata']['name'], 'Master', node['usage']['cpu'], node['usage']['memory'])) 
+        else: 
+            node_count +=1
+            print("Name: %s\tNode Type: %s\tCPU: %s\tMemory: %s" % (node['metadata']['name'], 'Worker/Infra/Custom', node['usage']['cpu'], node['usage']['memory']))
 
-#def node_check(v1):
-#    response = v1.read_node_status("node-name")
-#    print(response)
+
+# Maybe should be it's own function even?
+# Take the CPU and divide it with a 1000 or something to get the milicore. Use that to calculate "%"
+# Memory also needs to be converted to Mb. Maybe after having calculated "%"
+    r = v1.list_node()
+    cpu_per_node = {}
+    mem_per_node = {}
+    for node_item in r.items:
+        cpu_per_node[node_item.metadata.name] = {node_item.status.capacity['cpu']}
+        mem_per_node[node_item.metadata.name] = {node_item.status.capacity['memory']}
+#    print(r)
+    print(cpu_per_node)
+    print(mem_per_node)
+    print("Amount of nodes in cluster: ",node_count)
+
+  
 
 def main():
     config.load_kube_config()
@@ -91,8 +118,9 @@ def main():
     #print(get_all_routes(dyn_client))
     #print(check_routes(dyn_client))
     #check_routes(dyn_client)
-    get_failed_pods(v1)
+    #get_failed_pods(v1)
     #print(node_check(v1))
+    node_check(v1)
 
 
 
