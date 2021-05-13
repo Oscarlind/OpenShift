@@ -4,7 +4,6 @@ import requests
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
 
-
 # For OCP resources, use dyn_client instead of 'v1'
 
 # Api check
@@ -39,7 +38,6 @@ def check_empty_namespaces(v1):
             empty_ns.append(ns)
     return empty_ns
 
-
 # To do - check route if spec.tls exists, this means it is https so we can adjust "verify=False"
 # Easy workaround = hardcode verify=False 
 # If statement to run with verify=False on non-tls routes?
@@ -49,7 +47,6 @@ def check_routes(dyn_client):
     for route in all_routes:
         with requests.Session() as session:
             response = session.get("http://" + route, verify=False)
-            # Funkar att printa ut route, response.status_code men jag vill försöka spara ner det i en lista.
         checked_routes.append(route + " " + str(response.status_code))
     return checked_routes
 
@@ -60,21 +57,24 @@ def get_all_routes(dyn_client):
       route_list.append(route.spec.host)
     return route_list
 
+# Not in use - replaced by check_routes. Might come back to.
 def get_endpoint(session, url, ssl=True):
     r = requests.get(url, verify=ssl)
     return r.status_code
 
-# Todo - get only the failed pods 
-# Should I add a namespace dictionary and nest the pods under each ns?
+# Getting the failed pods and appending them to their namespaces.
 def get_failed_pods(v1):
-    failed_pods = {}
     number_of_failed_pods = 0
+    failed_pods = {}
     response = v1.list_pod_for_all_namespaces()
     for pod in response.items:
+        failed_pods[pod.metadata.namespace] = []
+    for pod in response.items:
         if "Running" not in pod.status.phase and "Succeeded" not in pod.status.phase:
-            failed_pods[pod.metadata.name] = [pod.status.phase]
+            failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.phase)
             number_of_failed_pods +=1
-    print(f"Number of failed pods:" + " " + str(number_of_failed_pods))
+    print("Number of failed pods: ", number_of_failed_pods)
+    print("\n", failed_pods)
     return(failed_pods)
 
 
@@ -91,7 +91,7 @@ def main():
     #print(get_all_routes(dyn_client))
     #print(check_routes(dyn_client))
     #check_routes(dyn_client)
-    print(get_failed_pods(v1))
+    get_failed_pods(v1)
     #print(node_check(v1))
 
 
