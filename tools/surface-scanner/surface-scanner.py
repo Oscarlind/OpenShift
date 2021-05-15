@@ -84,30 +84,30 @@ def node_check(v1):
     master_nodes = []
     node_count = 0
     for node in cluster_nodes['items']:
-        if "node-role.kubernetes.io/master" in node['metadata']['labels']:
-            master_nodes.append(node['metadata']['name'])
+#        if any('node-role.kubernetes' in s for s in node['metadata']['labels']):
+#            node_roles = [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string]
             node_count +=1
-            print("Name: %s\tNode Type: %s\tCPU: %s\tMemory: %s" % (node['metadata']['name'], 'Master', node['usage']['cpu'], node['usage']['memory'])) 
-        else: 
-            node_count +=1
-            print("Name: %s\tNode Type: %s\tCPU: %s\tMemory: %s" % (node['metadata']['name'], 'Worker/Infra/Custom', node['usage']['cpu'], node['usage']['memory']))
+            print("Name: %s\tNode Type: %s\tCPU: %s\tMemory: %s" % (node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory'])) 
 
+    print("Amount of nodes in cluster: ",node_count)
 
 # Maybe should be it's own function even?
-# Take the CPU and divide it with a 1000 or something to get the milicore. Use that to calculate "%"
+# Current millicore usage / (cores * 1000) Use to calculate "%"
 # Memory also needs to be converted to Mb. Maybe after having calculated "%"
     r = v1.list_node()
     cpu_per_node = {}
     mem_per_node = {}
     for node_item in r.items:
-        cpu_per_node[node_item.metadata.name] = {node_item.status.capacity['cpu']}
-        mem_per_node[node_item.metadata.name] = {node_item.status.capacity['memory']}
+        cpu_per_node[node_item.metadata.name] = {int(node_item.status.capacity['cpu'])}
+        mem_per_node[node_item.metadata.name] = {int(node_item.status.capacity['memory'][:-2])}
+  #  for node_mem in mem_per_node.keys():
+        
 #    print(r)
     print(cpu_per_node)
     print(mem_per_node)
-    print("Amount of nodes in cluster: ",node_count)
-
-  
+#    print(r.items)
+    for key, value in cpu_per_node.items():
+        print(key, value)
 
 def main():
     config.load_kube_config()
