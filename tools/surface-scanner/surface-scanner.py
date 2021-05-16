@@ -3,7 +3,6 @@ import openshift as oc
 import requests
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
-
 # For OCP resources, use dyn_client instead of 'v1'
 
 # Api check
@@ -81,11 +80,8 @@ def get_failed_pods(v1):
 def node_check(v1):
     api = client.CustomObjectsApi()
     cluster_nodes = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
-    master_nodes = []
     node_count = 0
     for node in cluster_nodes['items']:
-#        if any('node-role.kubernetes' in s for s in node['metadata']['labels']):
-#            node_roles = [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string]
             node_count +=1
             print("Name: %s\tNode Type: %s\tCPU: %s\tMemory: %s" % (node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory'])) 
 
@@ -98,16 +94,17 @@ def node_check(v1):
     cpu_per_node = {}
     mem_per_node = {}
     for node_item in r.items:
-        cpu_per_node[node_item.metadata.name] = {int(node_item.status.capacity['cpu'])}
-        mem_per_node[node_item.metadata.name] = {int(node_item.status.capacity['memory'][:-2])}
+        # Maybe remake to a list?
+        cpu_per_node = {node_item.metadata.name: int(node_item.status.capacity['cpu'])}
+        mem_per_node = {node_item.metadata.name: int(node_item.status.capacity['memory'][:-2])}
   #  for node_mem in mem_per_node.keys():
         
 #    print(r)
     print(cpu_per_node)
     print(mem_per_node)
-#    print(r.items)
-    for key, value in cpu_per_node.items():
-        print(key, value)
+# Converting Kb to Mb
+    for value in mem_per_node.values():
+        print(value // 1024)
 
 def main():
     config.load_kube_config()
