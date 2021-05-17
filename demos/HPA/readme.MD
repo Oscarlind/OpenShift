@@ -2,7 +2,7 @@ HPA - Horizontal Pod Auto Scaler
 =========
 Short demo on the HPA function in K8s/OCP
 
-HPA or Horizontal Pod Auto Scaler is a function that allows for automated scaling of applications based on CPU, Memory or even custom metrics. Below is an example of how to utilize the function on an example application based on CPU load.
+HPA or Horizontal Pod Auto Scaler is a function that allows for automated scaling of applications based on CPU, Memory or even custom metrics. Below is an example of how to utilize the function on an example application based on CPU load. At the end there is an example with memory being used instead.
 
 More information can be found here: https://docs.openshift.com/container-platform/4.7/nodes/pods/nodes-pods-autoscaling.html
 
@@ -104,3 +104,32 @@ Back in your first terminal run:
 `watch oc get hpa hpa-demo`
 
 Note: The autoscaling is not a instantaneous process. 
+
+Step 5 - [Extended] HPA using memory
+------------
+This step contains an example and demonstration of using the HPA based on memory metrics.
+
+> NOTE: If this is your starting point, create the namespace, then the LimitRange and the application before continuing.
+
+If you've done the previous steps, remove the currently active HPA:
+
+`oc delete hpa hpa-demo -n hpa-demo`
+
+Let's apply the memory based hpa:
+
+`oc apply -f memory-hpa.yaml`
+
+This HPA is defined the same as the previous one except that it is using memory instead of CPU. Keep an eye on the HPA until it gathered enough metrics to get a current base line:
+
+`watch oc get hpa hpa-demo-memory` 
+> The "TARGETS" field should not be "unknown/50%"
+
+Let this command run while we continue.
+
+Now we will once again be generating load, just this time based on memory. In another terminal run:
+
+`oc rsh $(oc get pods --no-headers -n hpa-demo | awk '{print $1}')`
+
+To generate some load run this in the pod:
+
+`dd if=/dev/zero of=/dev/shm/fill bs=1k count=1M`
