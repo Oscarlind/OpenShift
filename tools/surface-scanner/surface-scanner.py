@@ -82,18 +82,19 @@ def get_failed_pods(v1):
     number_of_failed_pods = 0
     failed_pods = {}
     response = v1.list_pod_for_all_namespaces()
-    failed_pods_table = PrettyTable(['Namespace', 'Pod name'])
+    failed_pods_table = PrettyTable(['Namespace', 'Pod name', 'Status'])
     for pod in response.items:
         failed_pods[pod.metadata.namespace] = []
     for pod in response.items:
         if "Running" not in pod.status.phase and "Succeeded" not in pod.status.phase:
             failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.phase)
+            failed_pods_table.add_row([pod.metadata.namespace, pod.metadata.name, pod.status.phase])
             number_of_failed_pods +=1
     print("\nNumber of failed pods: ", number_of_failed_pods)
     print("\nFailed pods:\n")
-    for namespace, item in failed_pods.items():
-        if item:
-            failed_pods_table.add_row([namespace, item])
+#    for namespace, item in failed_pods.items():
+#        if item:
+#            failed_pods_table.add_row([namespace, item])
     print(failed_pods_table)
     return(failed_pods)
 
