@@ -1,7 +1,9 @@
 #!/usr/bin/python3
+from os import O_APPEND
 import openshift as oc
 import requests
 import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
 from prettytable import PrettyTable
@@ -38,7 +40,7 @@ def check_empty_namespaces(v1):
         if pod_list == []:
             empty_ns.append(ns)
     for item in empty_ns:
-        if ("openshift" or "kube" or "default") in item:
+        if "openshift" in item or "kube" in item or "default" in item:
             pass
         else:
             empty_ns_table.add_row([item])
@@ -49,28 +51,37 @@ def check_empty_namespaces(v1):
 # Easy workaround = hardcode verify=False 
 # If statement to run with verify=False on non-tls routes?
 def check_routes(dyn_client):
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     all_routes = get_all_routes(dyn_client)
-#    checked_routes = []
+    route_table = PrettyTable(['Route', 'Status Code', 'Termination'])
     checked_routes = {}
-    for route in all_routes:
-        with requests.Session() as session:
-            response = session.get("http://" + route, verify=False)
-        checked_routes.update({route: response.status_code})
-#        checked_routes.append(route + " " + str(response.status_code))
+#    for route in all_routes:
+#        with requests.Session() as session:
+#            response = session.get("http://" + route, verify=False)
+#        checked_routes.update({route: response.status_code})
     print("\nRoutes:\n")
-    route_table = PrettyTable(['Route', 'Status Code'])
-    for key, value in checked_routes.items():
-        route_table.add_row([key, value])
+    for route, value in all_routes.items():
+        with requests.Session() as session:
+            if value is None:
+                response = session.get("http://" + route, verify=False)
+                checked_routes.update({route: response.status_code})
+                route_table.add_row([route, response.status_code, "http"])
+            else:
+                response = session.get("http://" + route, verify=False)
+#                response = session.get("https://" + route, verify=True)
+                checked_routes.update({route: response.status_code})
+                route_table.add_row([route, response.status_code, value.termination])
+
+#    for key, value in checked_routes.items():
+#        route_table.add_row([key, value])
     print(route_table)
     return checked_routes
 
 def get_all_routes(dyn_client):
-    route_list = []
+    route_dict = {}
     v1_routes = dyn_client.resources.get(api_version='route.openshift.io/v1', kind='Route')
     for route in v1_routes.get().items:
-      route_list.append(route.spec.host)
-    return route_list
+          route_dict.update({route.spec.host: route.spec.tls})
+    return route_dict
 
 # Not in use - replaced by check_routes. Might come back to.
 def get_endpoint(session, url, ssl=True):
@@ -90,26 +101,38 @@ def get_failed_pods(v1):
             failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.phase)
             failed_pods_table.add_row([pod.metadata.namespace, pod.metadata.name, pod.status.phase])
             number_of_failed_pods +=1
-    print("\nNumber of failed pods: ", number_of_failed_pods)
     print("\nFailed pods:\n")
 #    for namespace, item in failed_pods.items():
 #        if item:
 #            failed_pods_table.add_row([namespace, item])
     print(failed_pods_table)
+    print("\nNumber of failed pods: ", number_of_failed_pods)
     return(failed_pods)
 
 # Convert Ki to Mb and add % of CPU/Mem. For CPU do a check to see how many cores are available/node and
 def node_check(v1):
     api = client.CustomObjectsApi()
+    node_cpu_usage = {}
+    node_mem_usage = {}
     cluster_nodes = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
     node_count = 0
     node_table = PrettyTable(['Node name', 'Role', 'CPU', 'Memory'])
-    print("\nNode info: \n")
+    print("\nNode usage: \n")
     for node in cluster_nodes['items']:
-            node_count +=1
-            node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
+        node_count +=1
+        node_mem_usage[node['metadata']['name']] = int(node['usage']['memory'][:-2])
+        node_cpu_usage[node['metadata']['name']] = int(node['usage']['cpu'][:-1])
+#        node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node_mem_usage.values()])
+        node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
+    
+#    print(node_cpu_usage)
+#    print(node_mem_usage)
+    for key, mem in node_mem_usage.items():
+        node_mem_usage.update({key: mem // 1024})
+    print(node_mem_usage)
+
     print(node_table)
-    print("\nAmount of nodes in cluster: ",node_count)
+    print("\nNodes in cluster: ",node_count)
 
 # Maybe should be it's own function even?
 # Current millicore usage / (cores * 1000) Use to calculate "%"
@@ -118,17 +141,15 @@ def node_check(v1):
     cpu_per_node = {}
     mem_per_node = {}
     for node_item in r.items:
-        # Maybe remake to a list?
-        cpu_per_node = {node_item.metadata.name: int(node_item.status.capacity['cpu'])}
-        mem_per_node = {node_item.metadata.name: int(node_item.status.capacity['memory'][:-2])}
-  #  for node_mem in mem_per_node.keys():
+        cpu_per_node.update({node_item.metadata.name: int(node_item.status.capacity['cpu'])})
+        mem_per_node.update({node_item.metadata.name: int(node_item.status.capacity['memory'][:-2])})
         
-#    print(r)
-#    print(cpu_per_node)
-#    print(mem_per_node)
-# Converting Kb to Mb
-#    for value in mem_per_node.values():
-#        print(value // 1024)
+# Converting Kb to Mb and cores to millicores
+    for key, value in mem_per_node.items():
+        mem_per_node.update({key: value // 1024})
+    for key, value in cpu_per_node.items():
+        cpu_per_node.update({key: value * 1024})
+
 
 def main():
     config.load_kube_config()
@@ -147,3 +168,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
