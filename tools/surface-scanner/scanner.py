@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-from os import O_APPEND
 import openshift as oc
 import requests
 import urllib3
