@@ -65,7 +65,7 @@ def check_routes(dyn_client):
                 checked_routes.update({route: response.status_code})
                 route_table.add_row([route, response.status_code, "http"])
             else:
-                response = session.get("http://" + route, verify=False)
+                response = session.get("https://" + route, verify=False)
 #                response = session.get("https://" + route, verify=True)
                 checked_routes.update({route: response.status_code})
                 route_table.add_row([route, response.status_code, value.termination])
@@ -88,6 +88,7 @@ def get_endpoint(session, url, ssl=True):
     return r.status_code
 
 # Getting the failed pods and appending them to their namespaces.
+# Think I got this now. Need to verify some more.
 def get_failed_pods(v1):
     number_of_failed_pods = 0
     failed_pods = {}
@@ -96,14 +97,16 @@ def get_failed_pods(v1):
     for pod in response.items:
         failed_pods[pod.metadata.namespace] = []
     for pod in response.items:
-        if "Running" not in pod.status.phase and "Succeeded" not in pod.status.phase:
-            failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.phase)
-            failed_pods_table.add_row([pod.metadata.namespace, pod.metadata.name, pod.status.phase])
-            number_of_failed_pods +=1
+        if not pod.status.container_statuses[0].state.running and "Succeeded" not in pod.status.phase:
+            if pod.status.container_statuses[0].state.waiting:
+                failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.container_statuses[0].state.waiting.reason)
+                failed_pods_table.add_row([pod.metadata.namespace, pod.metadata.name, pod.status.container_statuses[0].state.waiting.reason])
+                number_of_failed_pods +=1
+            else:
+                failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.phase)
+                failed_pods_table.add_row([pod.metadata.namespace, pod.metadata.name, pod.status.phase])
+                number_of_failed_pods +=1
     print("\nFailed pods:\n")
-#    for namespace, item in failed_pods.items():
-#        if item:
-#            failed_pods_table.add_row([namespace, item])
     print(failed_pods_table)
     print("\nNumber of failed pods: ", number_of_failed_pods)
     return(failed_pods)
@@ -121,21 +124,21 @@ def node_check(v1):
         node_count +=1
         node_mem_usage[node['metadata']['name']] = int(node['usage']['memory'][:-2])
         node_cpu_usage[node['metadata']['name']] = int(node['usage']['cpu'][:-1])
-#        node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node_mem_usage.values()])
         node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
-    
+
 #    print(node_cpu_usage)
 #    print(node_mem_usage)
     for key, mem in node_mem_usage.items():
         node_mem_usage.update({key: mem // 1024})
-    print(node_mem_usage)
+#    print(node_mem_usage)
 
     print(node_table)
     print("\nNodes in cluster: ",node_count)
 
+# Build a function that generates the table? The check above might get a bit messy then?
+
 # Maybe should be it's own function even?
 # Current millicore usage / (cores * 1000) Use to calculate "%"
-# Memory also needs to be converted to Mb. Maybe after having calculated "%"
     r = v1.list_node()
     cpu_per_node = {}
     mem_per_node = {}
@@ -149,6 +152,9 @@ def node_check(v1):
     for key, value in cpu_per_node.items():
         cpu_per_node.update({key: value * 1024})
 
+# Calculating percentage
+
+
 
 def main():
     config.load_kube_config()
@@ -159,7 +165,6 @@ def main():
     #print(get_all_routes(dyn_client))
     check_routes(dyn_client)
     get_failed_pods(v1)
-#    print(node_check(v1))
     node_check(v1)
 
 

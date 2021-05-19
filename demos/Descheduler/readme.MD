@@ -42,10 +42,12 @@ Now that we have our operator, we can start by creating our descheduler.
 
 `oc apply -f descheduler.yaml`
 
-The configuration we are deploying is using only the LifecycleAndUtilization profile. This will remove pods that have too many restarts (100+), locate nodes that are under it's perspective, underutilized and try to move pods there from overutilized nodes. It will also evict pods that are older than 24 hours.
+The configuration we are deploying is using only the LifecycleAndUtilization profile. As mentioned earlier, a profile is essentially a bundle of *strategies* or conditions that the descheduler will use in order to determine which pods should be evicted.
 
 This configuration is taken from the configMap "cluster" that comes with the deployment of the descheduler.
 
+The LifecycleAndUtilization profile will ensure that pods with too many restarts (100+), are older than 24 hours will get evicted. It will also utilization checks on the nodes and determine which are, in the deschedulers perspective, under or overutilized. If applicable it will then evict pods from the overutilized nodes in order to keep a more even usage level.
+ 
 For this demo we will change the standard PodLifeTime eviction rule of 24 hours to 400 seconds.
 > NOTE: The configmap will get returned to its original state - this is only a temporary change.
 
