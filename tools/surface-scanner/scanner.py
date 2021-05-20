@@ -157,19 +157,55 @@ def node_check(v1):
 
 # Calculating percentage
 
+# List users with cluster-admin rights
+# Multiple cluster-admin/s rolebindnings. Need to loop through them all and gather all "subjects" to add to table.
+def admin_check(v1):
+    api = client.RbacAuthorizationV1Api()
+    cluster_admin_table = PrettyTable(['User', 'Group'])
+    cluster_items = []
+    cluster_items2 = []
+    cluster_admin_groups = []
+    cluster_admin_users = []
+    response = api.list_cluster_role_binding().items
+    for role in response:
+        if "cluster-admin" in role.metadata.name:
+            cluster_items.append(role.subjects)
+    for index in range(len(cluster_items)):
+        for index2 in range(len(cluster_items[index])):
+            cluster_items2.append(cluster_items[index][index2])
+    for item in cluster_items2:
+        if "Group" in item.kind:
+            cluster_admin_groups.append(item.name)
+        elif "User" in item.kind:
+            cluster_admin_users.append(item.name)
+    all_groups_list = []
+    admin_group_list = []
+    k8s_client = config.new_client_from_config()
+    dyn_client = DynamicClient(k8s_client)
+    v1_groups = dyn_client.resources.get(api_version='user.openshift.io/v1', kind='Group')
+    for group in v1_groups.get().items:
+        if group.metadata.name in cluster_admin_groups:
+            print(group.users)
+#        all_groups_list.append(group.metadata.name)
+#    print(all_groups_list)
+#    for i in all_groups_list:
+#        if i in cluster_admin_groups:
+#            admin_group_list.append(i)
+#    print(admin_group_list)
 
+    print(cluster_admin_groups)
 
 def main():
     config.load_kube_config()
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
-    check_empty_namespaces(v1)
+#    check_empty_namespaces(v1)
     #print(get_all_routes(dyn_client))
-    check_routes(dyn_client)
-    get_failed_pods(v1)
-    node_check(v1)
-
+#    check_routes(dyn_client)
+#    get_failed_pods(v1)
+#    node_check(v1)
+    admin_check(v1)
 
 
 
