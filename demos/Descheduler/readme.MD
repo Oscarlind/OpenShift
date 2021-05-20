@@ -32,14 +32,17 @@ Let's begin by creating the namespace:
 
 `oc new-project openshift-kube-descheduler-operator`
 
-From here we can eploy the Operator:
+From here we can deploy the Operator:
 
-`oc apply -f subscription-descheduler.yaml`
+Easiest way is through operatorhub, otherwise deploy:
+
+`oc apply -f sub-descheduler.yaml`
 
 Step 2 - Creating a Descheduler object
 ------------
 Now that we have our operator, we can start by creating our descheduler.
 
+Same here, easiest way is through the GUI, otherwise:
 `oc apply -f descheduler.yaml`
 
 The configuration we are deploying is using only the LifecycleAndUtilization profile. As mentioned earlier, a profile is essentially a bundle of *strategies* or conditions that the descheduler will use in order to determine which pods should be evicted.
@@ -74,7 +77,75 @@ I0518 10:57:12.706003       1 lownodeutilization.go:116] "Criteria for a node un
 I0518 10:57:12.706014       1 lownodeutilization.go:120] "No node is underutilized, nothing to do here, you might tune your thresholds further"
 ```
 
-Step 3 
+Step 3 AffinityAndTaints
 ------------
+For the second part we are going to explore the AffinityAndTaints profile.
+Lets start by deleting the previous KubeDescheduler.
+
+`oc delete kubedescheduler cluster -n openshift-kube-descheduler-operator`
+
+Lets redeploy our "application load" as well.
+
+`oc delete -f load-deploy.yaml`
+
+and:
+
+`oc apply -f load-deploy.yaml`
+
+Now we want to see where the pods are currently running:
+
+`oc get pods -o wide`
+
+Should return something similar to:
+
+```
+NAME                    READY   STATUS    RESTARTS   AGE     IP             NODE                 
+load-785dff9c7b-4jhkj   1/1     Running   0          3m54s   10.128.5.130   my.compute-1.internal
+load-785dff9c7b-5lctp   1/1     Running   0          3m54s   10.128.5.129   my.compute-1.internal
+load-785dff9c7b-6bvdm   1/1     Running   0          3m54s   10.131.2.68    my.compute-2.internal
+load-785dff9c7b-6tmzj   1/1     Running   0          3m54s   10.128.5.131   my.compute-1.internal
+load-785dff9c7b-6x99n   1/1     Running   0          3m54s   10.131.2.67    my.compute-2.internal
+load-785dff9c7b-7gxj8   1/1     Running   0          3m54s   10.129.3.45    my.compute-3.internal
+load-785dff9c7b-855v2   1/1     Running   0          3m54s   10.128.5.132   my.compute-1.internal
+load-785dff9c7b-b9kjg   1/1     Running   0          3m54s   10.129.3.48    my.compute-3.internal
+load-785dff9c7b-ggdkg   1/1     Running   0          3m54s   10.131.2.65    my.compute-2.internal
+load-785dff9c7b-gs9r4   1/1     Running   0          3m54s   10.129.3.47    my.compute-3.internal
+load-785dff9c7b-nj7hf   1/1     Running   0          3m54s   10.129.3.44    my.compute-3.internal
+load-785dff9c7b-nz7qs   1/1     Running   0          3m54s   10.131.2.64    my.compute-2.internal
+load-785dff9c7b-rsnkf   1/1     Running   0          3m54s   10.129.3.46    my.compute-3.internal
+load-785dff9c7b-z8j4w   1/1     Running   0          3m54s   10.131.2.66    my.compute-2.internal
+load-785dff9c7b-zfx25   1/1     Running   0          3m54s   10.128.5.133   my.compute-1.internal
+```
+
+As we can see there are 3 different nodes that the pods are running on. Let's chose one that we will apply a taint on.
+> INFO: Taints are a mechanism that allows us to deny scheduling of workload onto nodes unless a matching toleration exists.
+> Read more here: https://docs.openshift.com/container-platform/4.7/nodes/scheduling/nodes-scheduler-taints-tolerations.html
+
+`oc adm taint nodes <node-name> demo=true:NoSchedule`
+
+This taint ensures that only pods with the toleration demo=true can be scheduled on it.
+
+If we once again run:
+
+`oc get pods -o wide`
+
+We can see that the pods are still running on this node. If we were to manually remove them, they would be scheduled onto another node instead.
+
+The descheduler with the AffinityAndTaints profile would detect that there are pods running on a node where there are no matching taint/toleration. The descheduler would then start the eviction process to ensure that there are no pods running on the tainted node/s.
+
+For now we will apply the new descheduler with that profile.
+
+`oc apply -f descheduler2.yaml`
+
+If we check the pods now, we should see that they are getting evicted from our tainted node:
+
+`oc get pods -o wide`
+
+To check the logs:
+
+`oc logs -n openshift-kube-descheduler-operator $(oc get pods -n openshift-kube-descheduler-operator --no-headers | awk '{print $1}' | grep cluster)`
+
+As we can see, the pods have gotten evicted.
+
 Step 4
 ------------
