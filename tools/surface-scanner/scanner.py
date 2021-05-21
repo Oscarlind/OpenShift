@@ -162,7 +162,6 @@ def node_check(v1):
 def admin_check(v1):
     api = client.RbacAuthorizationV1Api()
     admin_table = PrettyTable(['Users', 'Groups'])
-    admin_counter = 0
     cluster_items = []
     cluster_items2 = []
     cluster_admin_groups = []
@@ -188,11 +187,9 @@ def admin_check(v1):
         if group.metadata.name in cluster_admin_groups:
             cluster_admin_users.extend(group.users)
     cluster_admin_users = list(dict.fromkeys(cluster_admin_users))
-    for admin in cluster_admin_users:
-        admin_table.add_row([admin, ""])
-        admin_counter +=1
-    for admin_group in cluster_admin_groups:
-        admin_table.add_row(["", admin_group])
+    for admin, admin_group in zip(cluster_admin_users, cluster_admin_groups):
+        admin_table.add_row([admin, admin_group])
+    admin_counter = len(cluster_admin_users)
     print(admin_table)
     print("There are:", admin_counter, "cluster-admins in the cluster")
 
