@@ -6,6 +6,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
 from prettytable import PrettyTable
+import itertools
 # For OCP resources, use dyn_client instead of 'v1'
 
 # Api check
@@ -187,13 +188,11 @@ def admin_check(v1):
         if group.metadata.name in cluster_admin_groups:
             cluster_admin_users.extend(group.users)
     cluster_admin_users = list(dict.fromkeys(cluster_admin_users))
-    for admin, admin_group in zip(cluster_admin_users, cluster_admin_groups):
-        admin_table.add_row([admin, admin_group])
+    for admin, admin_group in itertools.zip_longest(cluster_admin_users, cluster_admin_groups, fillvalue=' '):
+            admin_table.add_row([admin, admin_group])
     admin_counter = len(cluster_admin_users)
     print(admin_table)
     print("There are:", admin_counter, "cluster-admins in the cluster")
-
-
 
 def main():
     config.load_kube_config()
