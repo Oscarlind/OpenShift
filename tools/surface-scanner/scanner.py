@@ -161,7 +161,8 @@ def node_check(v1):
 # Multiple cluster-admin/s rolebindnings. Need to loop through them all and gather all "subjects" to add to table.
 def admin_check(v1):
     api = client.RbacAuthorizationV1Api()
-    cluster_admin_table = PrettyTable(['User', 'Group'])
+    admin_table = PrettyTable(['Users', 'Groups'])
+    admin_counter = 0
     cluster_items = []
     cluster_items2 = []
     cluster_admin_groups = []
@@ -185,15 +186,17 @@ def admin_check(v1):
     v1_groups = dyn_client.resources.get(api_version='user.openshift.io/v1', kind='Group')
     for group in v1_groups.get().items:
         if group.metadata.name in cluster_admin_groups:
-            print(group.users)
-#        all_groups_list.append(group.metadata.name)
-#    print(all_groups_list)
-#    for i in all_groups_list:
-#        if i in cluster_admin_groups:
-#            admin_group_list.append(i)
-#    print(admin_group_list)
+            cluster_admin_users.extend(group.users)
+    cluster_admin_users = list(dict.fromkeys(cluster_admin_users))
+    for admin in cluster_admin_users:
+        admin_table.add_row([admin, ""])
+        admin_counter +=1
+    for admin_group in cluster_admin_groups:
+        admin_table.add_row(["", admin_group])
+    print(admin_table)
+    print("There are:", admin_counter, "cluster-admins in the cluster")
 
-    print(cluster_admin_groups)
+
 
 def main():
     config.load_kube_config()
