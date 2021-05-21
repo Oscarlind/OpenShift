@@ -30,7 +30,7 @@ The operator should be installed in the *openshift-kube-descheduler-operator* na
 
 Let's begin by creating the namespace:
 
-`oc new-project openshift-kube-descheduler-operator`
+`oc create namespace openshift-kube-descheduler-operator`
 
 From here we can deploy the Operator:
 

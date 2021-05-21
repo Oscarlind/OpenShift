@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: load
+  name: load
+spec:
+  replicas: 15
+  selector:
+    matchLabels:
+      app: load
+  template:
+    metadata:
+      labels:
+        app: load
+    spec:
+      containers:
+      - image: busybox
+        imagePullPolicy: IfNotPresent
+        name: load-generated
+        command: ["sleep", "300"]
+        resources:
+          requests:
+            memory: 10Mi
+            cpu: 5m
+      restartPolicy: Always
+
