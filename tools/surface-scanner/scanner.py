@@ -1,5 +1,8 @@
 #!/usr/bin/python3
+from time import timezone
 import openshift as oc
+import datetime
+import pytz
 import requests
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -8,14 +11,6 @@ from kubernetes import client, config
 from prettytable import PrettyTable
 import itertools
 # For OCP resources, use dyn_client instead of 'v1'
-
-# Api check
-#url = ''
-#url_ssl = False
-#r = requests.get(url, verify=url_ssl)
-#print(r.status_code)
-#print(r.json)
-
 
 # TO DO - Create a requirement.txt - e.g. requires "openshift" "requests"
 # TO DO - New def to check only for SSL routes - which TLS route is broken
@@ -47,17 +42,10 @@ def check_empty_namespaces(v1):
     print(empty_ns_table)
     return empty_ns
 
-# To do - check route if spec.tls exists, this means it is https so we can adjust "verify=False"
-# Easy workaround = hardcode verify=False 
-# If statement to run with verify=False on non-tls routes?
 def check_routes(dyn_client):
     all_routes = get_all_routes(dyn_client)
     route_table = PrettyTable(['Route', 'Status Code', 'Termination'])
     checked_routes = {}
-#    for route in all_routes:
-#        with requests.Session() as session:
-#            response = session.get("http://" + route, verify=False)
-#        checked_routes.update({route: response.status_code})
     print("\nRoutes:\n")
     for route, value in all_routes.items():
         with requests.Session() as session:
@@ -70,9 +58,6 @@ def check_routes(dyn_client):
 #                response = session.get("https://" + route, verify=True)
                 checked_routes.update({route: response.status_code})
                 route_table.add_row([route, response.status_code, value.termination])
-
-#    for key, value in checked_routes.items():
-#        route_table.add_row([key, value])
     print(route_table)
     return checked_routes
 
@@ -89,7 +74,6 @@ def get_endpoint(session, url, ssl=True):
     return r.status_code
 
 # Getting the failed pods and appending them to their namespaces.
-# Think I got this now. Need to verify some more.
 def get_failed_pods(v1):
     number_of_failed_pods = 0
     failed_pods = {}
@@ -179,33 +163,58 @@ def admin_check(v1):
             cluster_admin_groups.append(item.name)
         elif "User" in item.kind:
             cluster_admin_users.append(item.name)
-    all_groups_list = []
-    admin_group_list = []
+
+    # Changing API to collect group info
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
     v1_groups = dyn_client.resources.get(api_version='user.openshift.io/v1', kind='Group')
+
+    # If a group is part of a cluster-admin group, add the users to the cluster admins list.
     for group in v1_groups.get().items:
         if group.metadata.name in cluster_admin_groups:
             cluster_admin_users.extend(group.users)
+    
+    # Removing duplicate entries from cluster admins list.
     cluster_admin_users = list(dict.fromkeys(cluster_admin_users))
     for admin, admin_group in itertools.zip_longest(cluster_admin_users, cluster_admin_groups, fillvalue=' '):
             admin_table.add_row([admin, admin_group])
     admin_counter = len(cluster_admin_users)
     print(admin_table)
     print("There are:", admin_counter, "cluster-admins in the cluster")
+    return cluster_admin_users
+
+
+def workload_age(v1):
+    response = v1.list_pod_for_all_namespaces()
+    date_now = datetime.datetime.now(pytz.utc)
+    cut_off_date = date_now - datetime.timedelta(days=9)
+    old_pods = {}
+    old_workload_table = PrettyTable(['Namespace', 'Pod'])
+    # Simple for loop to get the old pods.
+    for pod in response.items:
+        if "openshift" not in pod.metadata.namespace:
+            if "kube" not in pod.metadata.namespace:
+                if cut_off_date >= pod.metadata.creation_timestamp:
+                    old_pods[pod.metadata.name] = pod.metadata.namespace
+                    old_workload_table.add_row([pod.metadata.namespace, pod.metadata.name])
+
+    print("\nWorkload running longer than 9 days:\n")    
+    print(old_workload_table)
+    print("Number of old pods: \t", (len(old_pods)))
+    return old_pods
 
 def main():
     config.load_kube_config()
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
-#    check_empty_namespaces(v1)
+    check_empty_namespaces(v1)
     #print(get_all_routes(dyn_client))
-#    check_routes(dyn_client)
-#    get_failed_pods(v1)
-#    node_check(v1)
+    check_routes(dyn_client)
+    get_failed_pods(v1)
+    node_check(v1)
     admin_check(v1)
-
+    workload_age(v1)
 
 
 if __name__ == "__main__":
