@@ -102,32 +102,32 @@ def get_failed_pods(v1):
 # Convert Ki to Mb and add % of CPU/Mem. For CPU do a check to see how many cores are available/node and
 def node_check(v1):
     api = client.CustomObjectsApi()
-    node_cpu_usage = {}
-    node_mem_usage = {}
     cluster_nodes = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
-    node_count = 0
     node_table = PrettyTable(['Node name', 'Role', 'CPU', 'Memory'])
+    node_cpu = cpu_percentage_converter(v1)
+    node_mem = mem_percentage_converter(v1)
+    node_status = []
     print("\nNode usage: \n")
 
-    node_cpu = {}
-    node_mem = {}
     for node in cluster_nodes['items']:
-        node_cpu.update([(node['metadata']['name'],int(node['usage']['cpu'][:-1]))])
-        node_mem.update([(node['metadata']['name'],int(node['usage']['memory'][:-2]))])
-    
-    for key, value in node_mem.items():
-        node_mem.update({key: value // 1024})
-    print("\n", node_mem)
+        node_status.append([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string]])
+    for (k, v), (k2, v2) in zip(node_cpu.items(), node_mem.items()):
+        node_status.append(v)
+        node_status.append(v2)
+#        node_status.append([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
+    print(node_status)
 
+
+# Need to figure out how to get the values in single form. To iterate through all "nodes" in the list I should be able to use range and len.
+    print(node_status[0])     
+
+    print(node_table)
 
 #    for node in cluster_nodes['items']:
-#        node_count +=1
-#        node_mem_usage[node['metadata']['name']] = int(node['usage']['memory'][:-2])
-#        node_cpu_usage[node['metadata']['name']] = int(node['usage']['cpu'][:-1])
 #        node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
 
 #    print(node_table)
-#    print("\nNodes in cluster: ",node_count)
+    print("\nNodes in cluster: ",(len(cluster_nodes['items'])))
 
 # Build a function that generates the table? The check above might get a bit messy then?
 
@@ -138,6 +138,8 @@ def cpu_cap(v1):
     cpu_cap_node = {}
     for node_item in r.items:
         cpu_cap_node.update({node_item.metadata.name: int(node_item.status.capacity['cpu'])})
+        for key, value in cpu_cap_node.items():
+            cpu_cap_node.update({key: value * 1000})
     return cpu_cap_node
 
 def mem_cap(v1):
@@ -167,23 +169,25 @@ def mem_check(v1):
         node_mem_usage.update({key: value // 1024})
     return node_mem_usage
 
-def percentage_converter(v1):
-    node_cpu_perc = {}
+def mem_percentage_converter(v1):
     node_mem_perc = {}
     node_mem_usage = mem_check(v1)
-    node_cpu_usage = cpu_check(v1)
     node_mem_cap = mem_cap(v1)
-    node_cpu_cap = cpu_cap(v1)
 
 # Calculating memory percentage
     for (k, v), (k2, v2) in zip(node_mem_usage.items(), node_mem_cap.items()):
         node_mem_perc.update({k: v / v2 * 100})
-    print(node_mem_perc)
-    
+    return node_mem_perc
+
+def cpu_percentage_converter(v1):
+    node_cpu_perc = {}
+    node_cpu_usage = cpu_check(v1)
+    node_cpu_cap = cpu_cap(v1)
+
 # Calculate CPU percentage
     for (k, v), (k2, v2) in zip(node_cpu_usage.items(), node_cpu_cap.items()):
         node_cpu_perc.update({k: v / v2 * 100})
-    print(node_cpu_perc)
+    return node_cpu_perc
 
 # List users with cluster-admin rights
 # Multiple cluster-admin/s rolebindings. Need to loop through them all and gather all "subjects" to add to table.
@@ -222,7 +226,7 @@ def admin_check(v1):
     for admin, admin_group in itertools.zip_longest(cluster_admin_users, cluster_admin_groups, fillvalue=' '):
             admin_table.add_row([admin, admin_group])
     admin_counter = len(cluster_admin_users)
-    print(admin_table)
+    print("\n",admin_table)
     print("There are:", admin_counter, "cluster-admins in the cluster")
     return cluster_admin_users
 
@@ -249,14 +253,13 @@ def main():
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
-#    check_empty_namespaces(v1)
+    check_empty_namespaces(v1)
     #print(get_all_routes(dyn_client))
-#    check_routes(dyn_client)
-#    get_failed_pods(v1)
-#    node_check(v1)
-#    admin_check(v1)
-#    workload_age(v1)
-    percentage_converter(v1)
+    check_routes(dyn_client)
+    get_failed_pods(v1)
+    node_check(v1)
+    admin_check(v1)
+    workload_age(v1)
 
 
 if __name__ == "__main__":
