@@ -108,42 +108,85 @@ def node_check(v1):
     node_count = 0
     node_table = PrettyTable(['Node name', 'Role', 'CPU', 'Memory'])
     print("\nNode usage: \n")
+
+    node_cpu = {}
+    node_mem = {}
     for node in cluster_nodes['items']:
-        node_count +=1
-        node_mem_usage[node['metadata']['name']] = int(node['usage']['memory'][:-2])
-        node_cpu_usage[node['metadata']['name']] = int(node['usage']['cpu'][:-1])
-        node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
+        node_cpu.update([(node['metadata']['name'],int(node['usage']['cpu'][:-1]))])
+        node_mem.update([(node['metadata']['name'],int(node['usage']['memory'][:-2]))])
+    
+    for key, value in node_mem.items():
+        node_mem.update({key: value // 1024})
+    print("\n", node_mem)
 
-#    print(node_cpu_usage)
-#    print(node_mem_usage)
-    for key, mem in node_mem_usage.items():
-        node_mem_usage.update({key: mem // 1024})
-#    print(node_mem_usage)
 
-    print(node_table)
-    print("\nNodes in cluster: ",node_count)
+#    for node in cluster_nodes['items']:
+#        node_count +=1
+#        node_mem_usage[node['metadata']['name']] = int(node['usage']['memory'][:-2])
+#        node_cpu_usage[node['metadata']['name']] = int(node['usage']['cpu'][:-1])
+#        node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
+
+#    print(node_table)
+#    print("\nNodes in cluster: ",node_count)
 
 # Build a function that generates the table? The check above might get a bit messy then?
 
 # Maybe should be it's own function even?
 # Current millicore usage / (cores * 1000) Use to calculate "%"
+def cpu_cap(v1):
     r = v1.list_node()
-    cpu_per_node = {}
-    mem_per_node = {}
+    cpu_cap_node = {}
     for node_item in r.items:
-        cpu_per_node.update({node_item.metadata.name: int(node_item.status.capacity['cpu'])})
-        mem_per_node.update({node_item.metadata.name: int(node_item.status.capacity['memory'][:-2])})
-        
-# Converting Kb to Mb and cores to millicores
-    for key, value in mem_per_node.items():
-        mem_per_node.update({key: value // 1024})
-    for key, value in cpu_per_node.items():
-        cpu_per_node.update({key: value * 1024})
+        cpu_cap_node.update({node_item.metadata.name: int(node_item.status.capacity['cpu'])})
+    return cpu_cap_node
 
-# Calculating percentage
+def mem_cap(v1):
+    r = v1.list_node()
+    mem_cap_node = {}
+    for node_item in r.items:
+        mem_cap_node.update({node_item.metadata.name: int(node_item.status.capacity['memory'][:-2])})
+        for key, value in mem_cap_node.items():
+            mem_cap_node.update({key: value // 1024})
+    return mem_cap_node
+
+def cpu_check(v1):
+    api = client.CustomObjectsApi()
+    node_cpu_usage = {}
+    cluster_nodes = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
+    for node in cluster_nodes['items']:
+        node_cpu_usage.update([(node['metadata']['name'],int(node['usage']['cpu'][:-1]))])
+    return node_cpu_usage
+
+def mem_check(v1):
+    api = client.CustomObjectsApi()
+    node_mem_usage = {}
+    cluster_nodes = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
+    for node in cluster_nodes['items']:
+        node_mem_usage.update([(node['metadata']['name'],int(node['usage']['memory'][:-2]))])
+    for key, value in node_mem_usage.items():
+        node_mem_usage.update({key: value // 1024})
+    return node_mem_usage
+
+def percentage_converter(v1):
+    node_cpu_perc = {}
+    node_mem_perc = {}
+    node_mem_usage = mem_check(v1)
+    node_cpu_usage = cpu_check(v1)
+    node_mem_cap = mem_cap(v1)
+    node_cpu_cap = cpu_cap(v1)
+
+# Calculating memory percentage
+    for (k, v), (k2, v2) in zip(node_mem_usage.items(), node_mem_cap.items()):
+        node_mem_perc.update({k: v / v2 * 100})
+    print(node_mem_perc)
+    
+# Calculate CPU percentage
+    for (k, v), (k2, v2) in zip(node_cpu_usage.items(), node_cpu_cap.items()):
+        node_cpu_perc.update({k: v / v2 * 100})
+    print(node_cpu_perc)
 
 # List users with cluster-admin rights
-# Multiple cluster-admin/s rolebindnings. Need to loop through them all and gather all "subjects" to add to table.
+# Multiple cluster-admin/s rolebindings. Need to loop through them all and gather all "subjects" to add to table.
 def admin_check(v1):
     api = client.RbacAuthorizationV1Api()
     admin_table = PrettyTable(['Users', 'Groups'])
@@ -192,12 +235,10 @@ def workload_age(v1):
     old_workload_table = PrettyTable(['Namespace', 'Pod'])
     # Simple for loop to get the old pods.
     for pod in response.items:
-        if "openshift" not in pod.metadata.namespace:
-            if "kube" not in pod.metadata.namespace:
+        if "openshift" not in pod.metadata.namespace and "kube" not in pod.metadata.namespace:
                 if cut_off_date >= pod.metadata.creation_timestamp:
                     old_pods[pod.metadata.name] = pod.metadata.namespace
                     old_workload_table.add_row([pod.metadata.namespace, pod.metadata.name])
-
     print("\nWorkload running longer than 9 days:\n")    
     print(old_workload_table)
     print("Number of old pods: \t", (len(old_pods)))
@@ -208,13 +249,14 @@ def main():
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
-    check_empty_namespaces(v1)
+#    check_empty_namespaces(v1)
     #print(get_all_routes(dyn_client))
-    check_routes(dyn_client)
-    get_failed_pods(v1)
-    node_check(v1)
-    admin_check(v1)
-    workload_age(v1)
+#    check_routes(dyn_client)
+#    get_failed_pods(v1)
+#    node_check(v1)
+#    admin_check(v1)
+#    workload_age(v1)
+    percentage_converter(v1)
 
 
 if __name__ == "__main__":
