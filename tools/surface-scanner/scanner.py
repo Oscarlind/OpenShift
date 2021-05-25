@@ -189,6 +189,25 @@ def cpu_percentage_converter(v1):
         node_cpu_perc.update({k: v / v2 * 100})
     return node_cpu_perc
 
+# Trying to create a class and call a general percentage calc function for CPU and Memory.
+class Percentage_calc:
+    """
+    Convert usage to percentage
+    """
+    def __init__(self, usage, capacity):
+        self.usage = usage
+        self.capacity = capacity
+
+    def percentage(self):
+        perc_dict = {}
+        for (k, v), (k2, v2) in zip(self.usage.items(), self.capacity.items()):
+            perc_dict({k: v / v2 * 100})
+        print(perc_dict)
+        return perc_dict
+        perc=self.usage/self.capacity * 100
+        print(str(perc) + "%")
+
+
 # List users with cluster-admin rights
 # Multiple cluster-admin/s rolebindings. Need to loop through them all and gather all "subjects" to add to table.
 def admin_check(v1):
@@ -253,15 +272,15 @@ def main():
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
-    check_empty_namespaces(v1)
+#    check_empty_namespaces(v1)
     #print(get_all_routes(dyn_client))
-    check_routes(dyn_client)
-    get_failed_pods(v1)
-    node_check(v1)
-    admin_check(v1)
-    workload_age(v1)
-
-
+#    check_routes(dyn_client)
+#    get_failed_pods(v1)
+#    node_check(v1)
+#    admin_check(v1)
+#    workload_age(v1)
+    cpu = Percentage_calc(cpu_check(v1), cpu_cap(v1))
+    cpu.percentage()
 if __name__ == "__main__":
     main()
 
