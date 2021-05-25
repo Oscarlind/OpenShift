@@ -5,6 +5,7 @@ Demo of the Descheduler operator on OpenShift
 <img src="images/scheduler.png" alt="scheduler"/>
 # A simplified view of the Scheduling process.
 
+
 Where pods get scheduled on OpenShift is determined at the time of deployment by the Scheduler. The Scheduler does this by selecting the most appropriate node at that time. Anything that happens afterwards is out of its job description so to speak. What was once the most appropriate node may not always be. This is where the Descheduler comes in, by running periodic checks it tries to determine the most appropriate nodes for the pods and ensure that they are scheduled there. This by evicting the pods and letting the Scheduler re-deploy them.
  
 The Descheduler Operator works by using "Profiles". These contain a set of conditions from which an eviction should take place. There is currently three different profiles available through the operator:
