@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-from time import timezone
 import openshift as oc
 import datetime
 import pytz
@@ -10,10 +9,7 @@ from openshift.dynamic import DynamicClient
 from kubernetes import client, config
 from prettytable import PrettyTable
 import itertools
-# For OCP resources, use dyn_client instead of 'v1'
-
 # TO DO - Create a requirement.txt - e.g. requires "openshift" "requests"
-# TO DO - New def to check only for SSL routes - which TLS route is broken
 
 # Get all namespaces
 def get_all_namespaces(v1):
@@ -22,9 +18,11 @@ def get_all_namespaces(v1):
       namespace_list.append(i.metadata.name)
     return namespace_list
 
-# Checks for namespaces without pods
+
+# Checks for namespaces without pods.
 def check_empty_namespaces(v1):
     all_ns = get_all_namespaces(v1)
+    nr_of_empty_ns = 0
     empty_ns = []
     empty_ns_table = PrettyTable(['Empty namespaces'])
     for ns in all_ns:
@@ -32,16 +30,20 @@ def check_empty_namespaces(v1):
         # Easy to add resoruces 
         #cm_list = v1.list_namespaced_config_map(ns).items
        # if pod_list == [] and cm_list == []:
-        if pod_list == []:
+        if pod_list == []: 
             empty_ns.append(ns)
     for item in empty_ns:
         if "openshift" in item or "kube" in item or "default" in item:
             pass
         else:
             empty_ns_table.add_row([item])
+            nr_of_empty_ns +=1
     print(empty_ns_table)
+    print("\nNumber of empty namespaces: ", nr_of_empty_ns)
     return empty_ns
 
+
+# Checking each route with either http or https depending on termination.
 def check_routes(dyn_client):
     all_routes = get_all_routes(dyn_client)
     route_table = PrettyTable(['Route', 'Status Code', 'Termination'])
@@ -61,6 +63,8 @@ def check_routes(dyn_client):
     print(route_table)
     return checked_routes
 
+
+# Saving all routes with their termination (edge, passthrough, reencrypt or None)
 def get_all_routes(dyn_client):
     route_dict = {}
     v1_routes = dyn_client.resources.get(api_version='route.openshift.io/v1', kind='Route')
@@ -68,10 +72,6 @@ def get_all_routes(dyn_client):
           route_dict.update({route.spec.host: route.spec.tls})
     return route_dict
 
-# Not in use - replaced by check_routes. Might come back to.
-def get_endpoint(session, url, ssl=True):
-    r = requests.get(url, verify=ssl)
-    return r.status_code
 
 # Getting the failed pods and appending them to their namespaces.
 def get_failed_pods(v1):
@@ -99,58 +99,50 @@ def get_failed_pods(v1):
     print("\nNumber of failed pods: ", number_of_failed_pods)
     return(failed_pods)
 
-# Convert Ki to Mb and add % of CPU/Mem. For CPU do a check to see how many cores are available/node and
+# Prints a table of resource usage. Calls the percentage calc to add a % of resource usage of the nodes.
 def node_check(v1):
     api = client.CustomObjectsApi()
     cluster_nodes = api.list_cluster_custom_object("metrics.k8s.io", "v1beta1", "nodes")
-    node_table = PrettyTable(['Node name', 'Role', 'CPU', 'Memory'])
-    node_cpu = cpu_percentage_converter(v1)
-    node_mem = mem_percentage_converter(v1)
+    node_table = PrettyTable(['Node name', 'Role', 'CPU', 'CPU %', 'Memory', 'Memory %'])
+    node_cpu = cpu_check(v1)
+    node_mem = mem_check(v1)
     node_status = []
+    cpu = Percentage_calc(cpu_check(v1), cpu_cap(v1))
+    cpu.percentage()
+    mem = Percentage_calc(mem_check(v1), mem_cap(v1))
+    mem.percentage()
+  
     print("\nNode usage: \n")
-
-    for node in cluster_nodes['items']:
-        node_status.append([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string]])
-    for (k, v), (k2, v2) in zip(node_cpu.items(), node_mem.items()):
-        node_status.append(v)
-        node_status.append(v2)
-#        node_status.append([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
-    print(node_status)
-
-
-# Need to figure out how to get the values in single form. To iterate through all "nodes" in the list I should be able to use range and len.
-    print(node_status[0])     
-
+    for node, v, v2 in zip(cluster_nodes['items'], cpu.percentage().values(), mem.percentage().values()):
+        node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], [v], node['usage']['memory'], [v2]])
     print(node_table)
-
-#    for node in cluster_nodes['items']:
-#        node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], node['usage']['memory']])
-
-#    print(node_table)
     print("\nNodes in cluster: ",(len(cluster_nodes['items'])))
 
-# Build a function that generates the table? The check above might get a bit messy then?
 
-# Maybe should be it's own function even?
-# Current millicore usage / (cores * 1000) Use to calculate "%"
+# Current millicore usage / (cores * 1000) 
+# Saving CPU capacity of the nodes
 def cpu_cap(v1):
     r = v1.list_node()
     cpu_cap_node = {}
     for node_item in r.items:
         cpu_cap_node.update({node_item.metadata.name: int(node_item.status.capacity['cpu'])})
-        for key, value in cpu_cap_node.items():
-            cpu_cap_node.update({key: value * 1000})
+    for key, value in cpu_cap_node.items():
+        cpu_cap_node.update({key: value * 1000})
     return cpu_cap_node
 
+
+# Saving memory capacity of the nodes
 def mem_cap(v1):
     r = v1.list_node()
     mem_cap_node = {}
     for node_item in r.items:
         mem_cap_node.update({node_item.metadata.name: int(node_item.status.capacity['memory'][:-2])})
-        for key, value in mem_cap_node.items():
-            mem_cap_node.update({key: value // 1024})
+    for key, value in mem_cap_node.items():
+        mem_cap_node.update({key: value // 1024})
     return mem_cap_node
 
+
+# Gathering the node CPU usage
 def cpu_check(v1):
     api = client.CustomObjectsApi()
     node_cpu_usage = {}
@@ -159,6 +151,8 @@ def cpu_check(v1):
         node_cpu_usage.update([(node['metadata']['name'],int(node['usage']['cpu'][:-1]))])
     return node_cpu_usage
 
+
+# Gathering the node memory usage in MB
 def mem_check(v1):
     api = client.CustomObjectsApi()
     node_mem_usage = {}
@@ -169,43 +163,23 @@ def mem_check(v1):
         node_mem_usage.update({key: value // 1024})
     return node_mem_usage
 
-def mem_percentage_converter(v1):
-    node_mem_perc = {}
-    node_mem_usage = mem_check(v1)
-    node_mem_cap = mem_cap(v1)
-
-# Calculating memory percentage
-    for (k, v), (k2, v2) in zip(node_mem_usage.items(), node_mem_cap.items()):
-        node_mem_perc.update({k: v / v2 * 100})
-    return node_mem_perc
-
-def cpu_percentage_converter(v1):
-    node_cpu_perc = {}
-    node_cpu_usage = cpu_check(v1)
-    node_cpu_cap = cpu_cap(v1)
-
-# Calculate CPU percentage
-    for (k, v), (k2, v2) in zip(node_cpu_usage.items(), node_cpu_cap.items()):
-        node_cpu_perc.update({k: v / v2 * 100})
-    return node_cpu_perc
-
 # Trying to create a class and call a general percentage calc function for CPU and Memory.
 class Percentage_calc:
     """
-    Convert usage to percentage
+    Convert resource usage to percentage
     """
     def __init__(self, usage, capacity):
         self.usage = usage
         self.capacity = capacity
 
+
     def percentage(self):
         perc_dict = {}
         for (k, v), (k2, v2) in zip(self.usage.items(), self.capacity.items()):
-            perc_dict({k: v / v2 * 100})
-        print(perc_dict)
+            perc_dict.update({k: v / v2 * 100})
+        for k,v in perc_dict.items():
+            perc_dict.update({k: "%.2f" % v + "%"})
         return perc_dict
-        perc=self.usage/self.capacity * 100
-        print(str(perc) + "%")
 
 
 # List users with cluster-admin rights
@@ -230,6 +204,7 @@ def admin_check(v1):
         elif "User" in item.kind:
             cluster_admin_users.append(item.name)
 
+
     # Changing API to collect group info
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
@@ -246,10 +221,11 @@ def admin_check(v1):
             admin_table.add_row([admin, admin_group])
     admin_counter = len(cluster_admin_users)
     print("\n",admin_table)
-    print("There are:", admin_counter, "cluster-admins in the cluster")
+    print("\nThere are:", admin_counter, "cluster-admins in the cluster")
     return cluster_admin_users
 
 
+# Scanning for pods that are older than 9 days and not in any cluster specific namespace.
 def workload_age(v1):
     response = v1.list_pod_for_all_namespaces()
     date_now = datetime.datetime.now(pytz.utc)
@@ -264,7 +240,7 @@ def workload_age(v1):
                     old_workload_table.add_row([pod.metadata.namespace, pod.metadata.name])
     print("\nWorkload running longer than 9 days:\n")    
     print(old_workload_table)
-    print("Number of old pods: \t", (len(old_pods)))
+    print("\nNumber of old pods: \t", (len(old_pods)))
     return old_pods
 
 def main():
@@ -272,15 +248,13 @@ def main():
     k8s_client = config.new_client_from_config()
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
-#    check_empty_namespaces(v1)
-    #print(get_all_routes(dyn_client))
-#    check_routes(dyn_client)
-#    get_failed_pods(v1)
-#    node_check(v1)
-#    admin_check(v1)
-#    workload_age(v1)
-    cpu = Percentage_calc(cpu_check(v1), cpu_cap(v1))
-    cpu.percentage()
+    check_empty_namespaces(v1)
+    check_routes(dyn_client)
+    get_failed_pods(v1)
+    node_check(v1)
+    admin_check(v1)
+    workload_age(v1)
+
 if __name__ == "__main__":
     main()
 
