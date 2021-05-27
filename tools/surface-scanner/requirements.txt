@@ -1,0 +1,6 @@
+prettytable==2.1.0
+kubernetes==12.0.1
+requests==2.20.0
+pytz==2017.2
+urllib3==1.24.2
+openshift==0.12.0
