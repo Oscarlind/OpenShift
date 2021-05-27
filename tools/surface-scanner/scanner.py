@@ -9,7 +9,6 @@ from openshift.dynamic import DynamicClient
 from kubernetes import client, config
 from prettytable import PrettyTable
 import itertools
-# TO DO - Create a requirement.txt - e.g. requires "openshift" "requests"
 
 # Get all namespaces
 def get_all_namespaces(v1):
@@ -27,7 +26,7 @@ def check_empty_namespaces(v1):
     empty_ns_table = PrettyTable(['Empty namespaces'])
     for ns in all_ns:
         pod_list = v1.list_namespaced_pod(ns).items
-        # Easy to add resoruces 
+        # Easy to add resoruces, problem is performance
         #cm_list = v1.list_namespaced_config_map(ns).items
        # if pod_list == [] and cm_list == []:
         if pod_list == []: 
