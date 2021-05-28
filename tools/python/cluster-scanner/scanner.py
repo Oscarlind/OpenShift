@@ -37,7 +37,7 @@ def check_empty_namespaces(v1):
         else:
             empty_ns_table.add_row([item])
             nr_of_empty_ns +=1
-    print(empty_ns_table)
+    print("\n", empty_ns_table)
     print("\nNumber of empty namespaces: ", nr_of_empty_ns)
     return empty_ns
 
