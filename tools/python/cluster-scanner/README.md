@@ -22,6 +22,7 @@ The tool prints out the results directly in tables.
 <br/>
 Example Use:
 ----------------
+
 ```
 ➜ ./cluster-scanner.py
 
