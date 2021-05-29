@@ -19,7 +19,6 @@ Performs a surface scan on a cluster to identify it's general state. Currently d
 <br/>
 The tool prints out the results directly in tables.
 
-<br/>
 
 
 Example Use:
