@@ -1,22 +1,29 @@
 Cluster Scanner
 =========
 
-A simple cluster scanner tool.
+A simple cluster scanner tool for k8s & OpenShift.
+
+If the OpenShift API is detected, it will run checks specific for OpenShift in addition to the others.
 
 Performs a surface scan on a cluster to identify it's general state. Currently does:
-- Scans the nodes for their usage.
-- Identifies namespaces that currently has no workload
-- Does a check on all routes in the cluster.
-- Scans the cluster for failed pods.
-- Checks for pods that has been running for more than 9 days.
-- Identifies all users with cluster-admin rights.
 
+| Check      | K8s | OCP     |
+| ----------- | ----------- |  -----------  |
+| Scans the nodes for their usage.      | Yes       | Yes   |
+| Identifies namespaces that currently has no workload  | Yes        | Yes      |
+| Does a check on all routes in the cluster. | No       | Yes   |
+| Scans the cluster for failed pods. | Yes       | Yes   |
+| Checks for pods that has been running for more than 9 days. | Yes       | Yes   |
+| Identifies all users with cluster-admin rights. | No       | Yes   |
+
+<br/>
 The tool prints out the results directly in tables.
 
+<br/>
 Example Use:
 ----------------
 ```
-➜ ./scanner.py
+➜ ./cluster-scanner.py
 
 +------------------+
 | Empty namespaces |
