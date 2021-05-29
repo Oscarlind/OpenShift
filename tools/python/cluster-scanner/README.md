@@ -26,6 +26,10 @@ Example Use:
 
 ```
 ➜ ./cluster-scanner.py
+════════════════════════════════════╣ Starting Scan ╠════════════════════════════════════
+
+OpenShift version: 
+ 4.7.11
 
 +------------------+
 | Empty namespaces |
@@ -94,6 +98,7 @@ Workload running longer than 9 days:
 +-----------+-----------------------------------------+
 
 Number of old pods: 	 1
+════════════════════════════════════╣ Scan Complete ╠════════════════════════════════════
 ```
 
 License

@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-from logging import exception
-from kubernetes.client import exceptions
 import openshift as oc
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
@@ -19,15 +17,18 @@ def main():
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
     is_ocp = True
+    k8s_version = client.VersionApi().get_code()
     try:
-        dyn_client.resources.get(api_version='route.openshift.io/v1', kind='Route')
+        oc_version = dyn_client.resources.get(api_version='config.openshift.io/v1', kind='ClusterOperator')
+#        dyn_client.resources.get(api_version='route.openshift.io/v1', kind='Route')
     except Exception:
         is_ocp = False
 
     print('\033[1m' + '════════════════════════════════════╣ Starting Scan ╠════════════════════════════════════' + '\033[0m')
 
     if is_ocp == False:
-        print(('\n\033[1m' + 'OpenShift API not found. Skipping these checks...' + '\033[0m\n'))
+        print('\n\033[1m' + 'OpenShift API not found. Skipping these checks...' + '\033[0m\n')
+        print('\n\033[1m' + 'Kubernetes version: ' + '\033[0m\n' ,k8s_version.git_version)
         try:
             ns_check.check_empty_namespaces(v1)
             failed_pods.get_failed_pods(v1)
@@ -37,6 +38,7 @@ def main():
             print("\nUser interruption")
     else:
         try:
+            print('\n\033[1m' + 'OpenShift version: ' + '\033[0m\n' ,oc_version.get().items[0].status.versions[0].version)
             ns_check.check_empty_namespaces(v1)
             check_routes.check_routes(dyn_client)
             failed_pods.get_failed_pods(v1)
