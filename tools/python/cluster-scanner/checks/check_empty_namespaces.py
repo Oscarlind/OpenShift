@@ -13,23 +13,25 @@ def get_all_namespaces(v1):
 
 # Checks for namespaces without pods.
 def check_empty_namespaces(v1):
+    number_of_empty_ns = 0
     all_ns = get_all_namespaces(v1)
-    nr_of_empty_ns = 0
-    empty_ns = []
     empty_ns_table = PrettyTable(['Empty namespaces'])
-    for ns in all_ns:
-        pod_list = v1.list_namespaced_pod(ns).items
-        # Easy to add resoruces, problem is performance
-        #cm_list = v1.list_namespaced_config_map(ns).items
-       # if pod_list == [] and cm_list == []:
-        if pod_list == []: 
-            empty_ns.append(ns)
-    for item in empty_ns:
-        if "openshift" in item or "kube" in item or "default" in item:
+    all_pods = v1.list_pod_for_all_namespaces()
+    all_pods_ns = []
+    for pod in all_pods.items:
+        all_pods_ns.append(pod.metadata.namespace)
+    # Removing duplicates
+    all_pods_ns = list(dict.fromkeys(all_pods_ns))
+    # Getting the difference, the empty namespaces that is.
+    empty_namespace_set = list(set(all_ns).difference(all_pods_ns))
+    # Converting set to list for easier conditional check.
+    empty_ns_list = list(empty_namespace_set)
+    for i in empty_ns_list:
+        if "openshift" in i or "kube" in i or "default" in i:
             pass
         else:
-            empty_ns_table.add_row([item])
-            nr_of_empty_ns +=1
+            empty_ns_table.add_row([i])
+            number_of_empty_ns +=1
     print("\n", empty_ns_table)
-    print("\nNumber of empty namespaces: ", nr_of_empty_ns)
-    return empty_ns
+    print("\nNumber of empty namespaces: ", number_of_empty_ns)
+    return empty_ns_list

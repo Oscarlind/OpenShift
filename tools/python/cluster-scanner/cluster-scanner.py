@@ -20,7 +20,6 @@ def main():
     k8s_version = client.VersionApi().get_code()
     try:
         oc_version = dyn_client.resources.get(api_version='config.openshift.io/v1', kind='ClusterOperator')
-#        dyn_client.resources.get(api_version='route.openshift.io/v1', kind='Route')
     except Exception:
         is_ocp = False
 
