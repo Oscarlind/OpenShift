@@ -149,6 +149,3 @@ To check the logs:
 `oc logs -n openshift-kube-descheduler-operator $(oc get pods -n openshift-kube-descheduler-operator --no-headers | awk '{print $1}' | grep cluster)`
 
 As we can see, the pods have gotten evicted.
-
-Step 4
-------------
