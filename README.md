@@ -1,34 +1,24 @@
 # OpenShift
 This repo contains OCP stuff, like installation and configuration related things.
 
-# OpenShift Abbreviations
+## Tools:
+- Cluster-scanning script in Python and Bash
+- Sealed-Secret script in Bash
 
-    * componentstatuses (cs)
-    * configmaps (cm)
-    * controllerconfigs
-    * daemonsets (ds)
-    * deployments (deploy)
-    * deploymentconfigs (dc)
-    * endpoints (ep)
-    * events (ev)
-    * horizontalpodautoscalers (hpa)
-    * ingresses (ing)
-    * jobs
-    * limitranges (limits)
-    * MachineConfigPool (mcp)
-    * namespaces (ns)
-    * networkpolicies
-    * nodes (no)
-    * persistentvolumeclaims (pvc)
-    * persistentvolumes (pv)
-    * pods (po)
-    * poddisruptionbudget (pdb)
-    * podsecuritypolicies (psp)
-    * podtemplates
-    * replicasets (rs)
-    * replicationcontrollers (rc)
-    * resourcequotas (quota)
-    * secrets
-    * serviceaccounts (sa)
-    * services (svc)
-    * subscriptions (subs)
+## Demos:
+- HPA
+- VPA
+- Machine Autoscaling
+- Descheduler
+- Sealed-Secrets
+
+## Environment Cleaning
+- Namespace clean up
+- Pod clean up
+- Developer Catalog clean up (OCP 3.11
+
+## Cluster-Test
+- Simple Ansible role for doing a general smoke-test
+
+
+
