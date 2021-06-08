@@ -1,0 +1,21 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: demo-vpa
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: prometheus-example-app
+  updatePolicy: 
+    updateMode:  Recreate
+    containerPolicies:
+      - containerName: '*'
+        minAllowed:
+          cpu: 0m
+          memory: 0Mi
+        maxAllowed:
+          cpu: 200m
+          memory: 200Mi
+        controlledResources: ["cpu", "memory"]
+        controlledValues: RequestsAndLimits
