@@ -15,6 +15,7 @@ Performs a surface scan on a cluster to identify it's general state. Currently d
 | Scans the cluster for failed pods. | Yes       | Yes   |
 | Checks for pods that has been running for more than 9 days. | Yes       | Yes   |
 | Identifies all users with cluster-admin rights. | No       | Yes   |
+| Counts the number of ImageStreamTags per ImageStream. | No       | Yes   |
 
 <br/>
 The tool prints out the results directly in tables.

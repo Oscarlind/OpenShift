@@ -1,19 +1,11 @@
 #!/usr/bin/python3
 import openshift as oc
-import datetime
-import pytz
-import requests
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
 from prettytable import PrettyTable
-import itertools
 
-config.load_kube_config()
-k8s_client = config.new_client_from_config()
-dyn_client = DynamicClient(k8s_client)
-v1=client.CoreV1Api()
 
 # Getting the failed pods and appending them to their namespaces.
 def get_failed_pods(v1):

@@ -8,7 +8,7 @@ from prettytable import PrettyTable
 def get_all_namespaces(v1):
     namespace_list = []
     for i in v1.list_namespace().items:
-      namespace_list.append(i.metadata.name)
+        namespace_list.append(i.metadata.name)
     return namespace_list
 
 # Checks for namespaces without pods.
