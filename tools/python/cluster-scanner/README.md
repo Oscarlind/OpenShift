@@ -20,6 +20,46 @@ Performs a surface scan on a cluster to identify it's general state. Currently d
 <br/>
 The tool prints out the results directly in tables.
 
+Explaination of the checks
+----------------
+These checks targets different potential problem areas one might encounter in a Kubernetes/OpenShift cluster. They have been designed to give the user a quick overview of the cluster health and what areas might need intervention.
+
+The scan is primarily intended to give a new administrator information of the cluster but could just as well be used by someone administrating it for a longer period of time.
+
+### Node Scan
+This check is replicating the command: `oc adm top node` while giving additional information to the user, such as the **roles** of the nodes. This since we have different expectations and requirements on our nodes depending on what workload they are holding. 
+
+We might have certain nodes dedicated for ML/AI and that might be a reason why their resource usage differs compared to standard worker nodes. This check intends to make these subtleties visible at a first glance.
+
+### Empty namespaces
+While namespaces themselves do not use or reserve any resources, there might be reasons to want to know why there are unused ones in your cluster. They might hold a specific name that someone wants to reuse or might be for entirely esthetical reasons of not wanting extra namespaces without meaning.
+
+### Route check
+Many of the applications running on the cluster will have their own routes. This check intends to give the user a quick rundown of the routes that exist and their current status.
+
+### Failed Pods
+That pods are failing or getting stuck due to various reasons is to be expected. This check allows the user to see in which **namespace** the issue occured, which **pod** is having issues and also **what** the issue is.
+
+### Long running workload
+While pods can run without issues for a long period of time, it might be advantageous to let them "reboot" once in a while. Maybe there are pods running without being used that could actually be removed. There could be unidentified issues when the underlying application has been running for a long period of time. It might also not be any problem at all, just information that could be interesting.
+
+Whatever the reason might be, this scan intends to let the user know about these pods and let them make a decision based on the information.
+
+### Cluster-Admin check
+Depending on how your organization handles administrative rights to your clusters this can be a very quick and easy way of determining who actually has these privileges or not. 
+
+Many organizations use some sort of ***service form template*** that a user is required to fill in to request privileged access. These might be approved by managers without a full understanding of the impact the approval might have.
+
+Another, not uncommon, scenario is when access is given while bypassing the standardized process. E.g an administrator gives a colleague the privileges directly without them having gone through their service form.
+
+This can lead to the wrong people having administrative rights, an unusual high number of cluster-administrators etc. This is exactly what this check is intended to watch out for. 
+
+### ImageStreamTag check
+Something I have noticed is that ImageStreams and the way of using tags in OpenShift is not always done right and can have pretty significant complications with time. While it is recommended to use a small but significant amount of different tags for **ImageStreams**, sometimes you will see some using unique tags for each build. 
+
+A consequence of this is that each tag is referring to an image. This image wont be available for pruning while it is being referred to. Over time this can lead to a large amount of unused images being stored due to their tags never getting removed.
+
+This check helps the user look out for this pattern. 
 
 
 Example Use:
