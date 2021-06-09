@@ -27,7 +27,7 @@ These checks targets different potential problem areas one might encounter in a 
 The scan is primarily intended to give a new administrator information of the cluster but could just as well be used by someone administrating it for a longer period of time.
 
 ### Node Scan
-This check is replicating the command: `oc adm top node` while giving additional information to the user, such as the **roles** of the nodes. This since we have different expectations and requirements on our nodes depending on what workload they are holding. 
+This check is replicating the command: `oc adm top node` while giving additional information to the user, such as the **roles** of the nodes. This since we have different expectations and requirements of our nodes depending on what workload they are holding. 
 
 We might have certain nodes dedicated for ML/AI and that might be a reason why their resource usage differs compared to standard worker nodes. This check intends to make these subtleties visible at a first glance.
 
