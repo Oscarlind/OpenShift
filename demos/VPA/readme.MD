@@ -2,7 +2,7 @@ VPA - Vertical Pod Autoscaler
 =========
 Short demo of the VPA in OCP
 
-The lesser known alternative for auto-scaling workload in OCP. The more commonly known autoscaler, the HPA - horizontal pod autoscaling resolves around scaling pods up and down in order to ensure efficient resource consumption regards to application load. The VPA instead tries to set the most correct resource requests and limits based on over time usage data.
+The lesser known alternative for auto-scaling workload in OCP. The more commonly known autoscaler, the HPA - horizontal pod autoscaler resolves around scaling pods up and down in order to ensure efficient resource consumption regards to application load. The VPA instead tries to set the most correct resource requests and limits based on over time usage data.
 
 In short:
 * HPA - Autoscaling on pod replicas to ensure optimal ratio between pods/workload
@@ -14,7 +14,7 @@ Step 1 - Installing VPA
 ------------
 For us to use the vertical pod autoscaler, we need to install it. We do this by installing a number of CRD:s.
 
->- **NOTE:** These steps are taken from the github url pasted above
+>- **NOTE:** These steps are taken from the github url pasted above. We can also use the VPA operator that is in Tech Preview (as of 4.7).
 
 Clone the repo:
 
@@ -145,5 +145,7 @@ References and further reading
 [Vertical Pod Autoscaling GitHub](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler)
 
 [Autopilot: Workload Autoscaling at Google Scale](https://research.google/pubs/pub49174/)
+
+[VPA Operator - OpenShift Docs](https://docs.openshift.com/container-platform/4.7/nodes/pods/nodes-pods-vertical-autoscaler.html)
 
 [Vertical Pod Autoscaling: The Definitive Guide](https://povilasv.me/vertical-pod-autoscaling-the-definitive-guide/)
