@@ -10,6 +10,7 @@ import checks.get_failed_pods as failed_pods
 import checks.node_check as node_check
 import checks.workload_age  as workload_age
 import checks.check_istags as check_istags
+import checks.workload_requests as workload_requests
 
 def main():
     config.load_kube_config()
@@ -45,6 +46,7 @@ def main():
             workload_age.workload_age(v1)
             check_istags.check_istags(dyn_client)
             node_check.node_check(v1)
+            workload_requests.check_requests(v1)
         except KeyboardInterrupt:
             print("\nUser interruption")
         

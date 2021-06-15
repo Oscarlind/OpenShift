@@ -16,6 +16,7 @@ Performs a surface scan on a cluster to identify it's general state. Currently d
 | Checks for pods that has been running for more than 9 days. | Yes       | Yes   |
 | Identifies all users with cluster-admin rights. | No       | Yes   |
 | Counts the number of ImageStreamTags per ImageStream. | No       | Yes   |
+| Locates all pods that have no resource requests set. | Yes       | Yes   |
 
 <br/>
 The tool prints out the results directly in tables.
@@ -33,6 +34,8 @@ We might have certain nodes dedicated for ML/AI and that might be a reason why t
 
 ### Empty namespaces
 While namespaces themselves do not use or reserve any resources, there might be reasons to want to know why there are unused ones in your cluster. They might hold a specific name that someone wants to reuse or might be for entirely esthetical reasons of not wanting extra namespaces without meaning.
+
+>INFO: This check looks only for running workloads (pods) there might be other resources that one wants to keep, e.g. configmaps, secrets etc.
 
 ### Route check
 Many of the applications running on the cluster will have their own routes. This check intends to give the user a quick rundown of the routes that exist and their current status.
@@ -60,6 +63,9 @@ Something I have noticed is that ImageStreams and the way of using tags in OpenS
 A consequence of this is that each tag is referring to an image. This image wont be available for pruning while it is being referred to. Over time this can lead to a large amount of unused images being stored due to their tags never getting removed.
 
 This check helps the user look out for this pattern. 
+
+### Resource request check
+Best practice is to always include requests (and limits) to your workloads. This can be done either directly in the deployment or by using a limitRange with defaults set. This check is intended to scan the cluster for those pods that are not having their resource requests set.
 
 
 Example Use:
