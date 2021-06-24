@@ -72,36 +72,41 @@ Example Use:
 ----------------
 
 ```
-➜ ./cluster-scanner.py
+➜ ./cluster-scanner.py 
 ════════════════════════════════════╣ Starting Scan ╠════════════════════════════════════
 
 OpenShift version: 
- 4.7.11
+ 4.8.0-rc.0
 
-+------------------+
-| Empty namespaces |
-+------------------+
-|     for-test     |
-|      hello       |
-+------------------+
+ +----------------------+
+|   Empty namespaces   |
++----------------------+
+| we-are-the-champions |
+|   hello-configmap    |
+|       whatwhat       |
++----------------------+
 
-Number of empty namespaces:  2
+Number of empty namespaces:  3
 
 Routes:
 
-+----------------------------------------------------------------------------------+-------------+-------------+
-|                                      Route                                       | Status Code | Termination |
-+----------------------------------------------------------------------------------+-------------+-------------+
-|            oauth-openshift.apps.cluster-7d2e.my-lab-1738.example.com             |     403     | passthrough |
-|       console-openshift-console.apps.cluster-7d2e.my-lab-1738.example.com        |     200     |  reencrypt  |
-|      downloads-openshift-console.apps.cluster-7d2e.my-lab-1738.example.com       |     200     |     edge    |
-|    canary-openshift-ingress-canary.apps.cluster-7d2e.my-lab-1738.example.com     |     200     |     edge    |
-| alertmanager-main-openshift-monitoring.apps.cluster-7d2e.my-lab-1738.example.com |     403     |  reencrypt  |
-|      grafana-openshift-monitoring.apps.cluster-7d2e.my-lab-1738.example.com      |     403     |  reencrypt  |
-|  prometheus-k8s-openshift-monitoring.apps.cluster-7d2e.my-lab-1738.example.com   |     403     |  reencrypt  |
-|  thanos-querier-openshift-monitoring.apps.cluster-7d2e.my-lab-1738.example.com   |     403     |  reencrypt  |
-|    prometheus-example-app-vpa-demo.apps.cluster-7d2e.my-lab-1738.example.com     |     200     |     http    |
-+----------------------------------------------------------------------------------+-------------+-------------+
++-----------------------------------------------------------------------------------+-------------+-------------+
+|                                       Route                                       | Status Code | Termination |
++-----------------------------------------------------------------------------------+-------------+-------------+
+|            argocd-server-lala.apps.cluster-2088.my-lab-173.example.com            |     200     | passthrough |
+|              oauth-openshift.apps.cluster-2088.my-lab-173.example.com             |     403     | passthrough |
+|         console-openshift-console.apps.cluster-2088.my-lab-173.example.com        |     200     |  reencrypt  |
+|        downloads-openshift-console.apps.cluster-2088.my-lab-173.example.com       |     200     |     edge    |
+|         cluster-openshift-gitops.apps.cluster-2088.my-lab-173.example.com         |     403     |  reencrypt  |
+|           kam-openshift-gitops.apps.cluster-2088.my-lab-173.example.com           |     403     | passthrough |
+| openshift-gitops-server-openshift-gitops.apps.cluster-2088.my-lab-173.example.com |     200     | passthrough |
+|      canary-openshift-ingress-canary.apps.cluster-2088.my-lab-173.example.com     |     200     |     edge    |
+|  alertmanager-main-openshift-monitoring.apps.cluster-2088.my-lab-173.example.com  |     403     |  reencrypt  |
+|       grafana-openshift-monitoring.apps.cluster-2088.my-lab-173.example.com       |     403     |  reencrypt  |
+|    prometheus-k8s-openshift-monitoring.apps.cluster-2088.my-lab-173.example.com   |     403     |  reencrypt  |
+|    thanos-querier-openshift-monitoring.apps.cluster-2088.my-lab-173.example.com   |     403     |  reencrypt  |
+|              jenkins-testing.apps.cluster-2088.my-lab-173.example.com             |     403     |     edge    |
++-----------------------------------------------------------------------------------+-------------+-------------+
 
 Failed pods:
 
@@ -111,21 +116,6 @@ Failed pods:
 +-----------+----------+--------+
 
 Number of failed pods:  0
-
-Node usage: 
-
-+-----------------------------------------------+--------------------------------------------------------------------+------+------------+-----------+------------+
-|                   Node name                   |                                Role                                | CPU  |   CPU %    |   Memory  |  Memory %  |
-+-----------------------------------------------+--------------------------------------------------------------------+------+------------+-----------+------------+
-| ip-10-0-130-112.eu-central-1.compute.internal |                 ['node-role.kubernetes.io/master']                 | 461m | ['12.10%'] | 5213544Ki | ['32.37%'] |
-|  ip-10-0-139-78.eu-central-1.compute.internal | ['node-role.kubernetes.io/demo', 'node-role.kubernetes.io/worker'] | 480m | ['22.40%'] | 3167528Ki | ['39.90%'] |
-| ip-10-0-171-134.eu-central-1.compute.internal |                 ['node-role.kubernetes.io/master']                 | 990m | ['25.25%'] | 8095620Ki | ['50.80%'] |
-| ip-10-0-183-104.eu-central-1.compute.internal |                 ['node-role.kubernetes.io/worker']                 | 129m | ['7.85%']  | 2898588Ki | ['36.57%'] |
-|  ip-10-0-209-85.eu-central-1.compute.internal |                 ['node-role.kubernetes.io/master']                 | 529m | ['14.85%'] | 5175748Ki | ['32.19%'] |
-| ip-10-0-218-152.eu-central-1.compute.internal |                 ['node-role.kubernetes.io/worker']                 | 500m | ['24.45%'] | 3194620Ki | ['40.25%'] |
-+-----------------------------------------------+--------------------------------------------------------------------+------+------------+-----------+------------+
-
-Nodes in cluster:  6
 
  +--------------+-----------------------+
 |    Users     |         Groups        |
@@ -138,14 +128,47 @@ There are: 2 cluster-admins in the cluster
 
 Workload running longer than 9 days:
 
-+-----------+-----------------------------------------+
-| Namespace |                   Pod                   |
-+-----------+-----------------------------------------+
-|  vpa-demo | prometheus-example-app-79697bd67f-x9j5v |
-+-----------+-----------------------------------------+
++-----------+-----+
+| Namespace | Pod |
++-----------+-----+
++-----------+-----+
 
-Number of old pods: 	 1
+Number of old pods: 	 0
+
+ImageStreamTags over 10 per ImageStream
+
+ +-----------+-------------+----------------+
+| Namespace | ImageStream | Number of tags |
++-----------+-------------+----------------+
++-----------+-------------+----------------+
+
+Node usage: 
+
++-----------------------------------------------+------------------------------------+-------+------------+-----------+------------+
+|                   Node name                   |                Role                |  CPU  |   CPU %    |   Memory  |  Memory %  |
++-----------------------------------------------+------------------------------------+-------+------------+-----------+------------+
+| ip-10-0-138-122.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] |  540m | ['29.90%'] | 4438512Ki | ['55.93%'] |
+| ip-10-0-147-178.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] | 1225m | ['26.45%'] | 9691876Ki | ['60.18%'] |
+|  ip-10-0-169-60.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] |  669m | ['16.28%'] | 5771496Ki | ['35.73%'] |
+| ip-10-0-170-162.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] |  309m | ['15.05%'] | 4536092Ki | ['57.63%'] |
+| ip-10-0-206-184.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] |  471m | ['11.15%'] | 4473244Ki | ['27.80%'] |
+|  ip-10-0-206-82.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] |  236m | ['4.55%']  | 1797892Ki | ['22.38%'] |
++-----------------------------------------------+------------------------------------+-------+------------+-----------+------------+
+
+Nodes in cluster:  6
+
+ +-----------+-------------------------------------+
+| Namespace |               Pod name              |
++-----------+-------------------------------------+
+|    lala   |   argocd-application-controller-0   |
+|    lala   |    argocd-redis-64689bc88d-q8ggt    |
+|    lala   | argocd-repo-server-74bbbf5c75-2hzb2 |
+|    lala   |    argocd-server-57bb7f557d-7xjxj   |
++-----------+-------------------------------------+
+
+Number of pods without requests specified:  4
 ════════════════════════════════════╣ Scan Complete ╠════════════════════════════════════
+
 ```
 
 License
