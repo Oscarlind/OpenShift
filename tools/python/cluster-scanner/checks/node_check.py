@@ -2,7 +2,6 @@
 from kubernetes import client, config
 from prettytable import PrettyTable
 
-
 # Prints a table of resource usage. Calls the percentage calc to add a % of resource usage of the nodes.
 def node_check(v1):
     api = client.CustomObjectsApi()

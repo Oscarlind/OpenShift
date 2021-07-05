@@ -11,6 +11,8 @@ import checks.node_check as node_check
 import checks.workload_age  as workload_age
 import checks.check_istags as check_istags
 import checks.workload_requests as workload_requests
+from kubernetes.client.rest import ApiException
+
 
 def main():
     config.load_kube_config()
@@ -36,6 +38,8 @@ def main():
             node_check.node_check(v1)
         except KeyboardInterrupt:
             print("\nUser interruption")
+        except ApiException:
+            print("\nMetrics server does not seem to be installed, skipping node check\n")
     else:
         try:
             print('\n\033[1m' + 'OpenShift version: ' + '\033[0m\n' ,oc_version.get().items[0].status.versions[0].version)
