@@ -2,6 +2,7 @@
 import openshift as oc
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 # The different checks
 import checks.admin_check as admin_check
 import checks.check_empty_namespaces as ns_check
@@ -11,7 +12,6 @@ import checks.node_check as node_check
 import checks.workload_age  as workload_age
 import checks.check_istags as check_istags
 import checks.workload_requests as workload_requests
-from kubernetes.client.rest import ApiException
 
 
 def main():
