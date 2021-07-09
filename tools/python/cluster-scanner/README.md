@@ -17,6 +17,7 @@ Performs a surface scan on a cluster to identify it's general state. Currently d
 | Identifies all users with cluster-admin rights. | No       | Yes   |
 | Counts the number of ImageStreamTags per ImageStream. | No       | Yes   |
 | Locates all pods that have no resource requests set. | Yes       | Yes   |
+| Checks the ingress certificate and for router-sharding. | No       | Yes   |
 
 <br/>
 The tool prints out the results directly in tables.
@@ -66,7 +67,8 @@ This check helps the user look out for this pattern.
 
 ### Resource request check
 Best practice is to always include requests (and limits) to your workloads. This can be done either directly in the deployment or by using a limitRange with defaults set. This check is intended to scan the cluster for those pods that are not having their resource requests set.
-
+### Ingress
+Simple check to see the validity of the ingress certificate. Issuer, issued to and expiration date is shown. Will also notify if the cluster is using the out of the box certificate instead of a custom one. Will also look for router-sharding but as of right now it won't validate these certificates.
 
 Example Use:
 ----------------
@@ -76,55 +78,56 @@ Example Use:
 ════════════════════════════════════╣ Starting Scan ╠════════════════════════════════════
 
 OpenShift version: 
- 4.8.0-rc.0
+ 4.8.0-rc.3
 
- +----------------------+
-|   Empty namespaces   |
-+----------------------+
-| we-are-the-champions |
-|   hello-configmap    |
-|       whatwhat       |
-+----------------------+
+Empty namespaces
+ +------------------+
+| Empty namespaces |
++------------------+
+|    app-test1     |
++------------------+
 
-Number of empty namespaces:  3
+Number of empty namespaces:  1
 
-Routes:
+Routes: 
 
-+-----------------------------------------------------------------------------------+-------------+-------------+
-|                                       Route                                       | Status Code | Termination |
-+-----------------------------------------------------------------------------------+-------------+-------------+
-|            argocd-server-lala.apps.cluster-2088.my-lab-173.example.com            |     200     | passthrough |
-|              oauth-openshift.apps.cluster-2088.my-lab-173.example.com             |     403     | passthrough |
-|         console-openshift-console.apps.cluster-2088.my-lab-173.example.com        |     200     |  reencrypt  |
-|        downloads-openshift-console.apps.cluster-2088.my-lab-173.example.com       |     200     |     edge    |
-|         cluster-openshift-gitops.apps.cluster-2088.my-lab-173.example.com         |     403     |  reencrypt  |
-|           kam-openshift-gitops.apps.cluster-2088.my-lab-173.example.com           |     403     | passthrough |
-| openshift-gitops-server-openshift-gitops.apps.cluster-2088.my-lab-173.example.com |     200     | passthrough |
-|      canary-openshift-ingress-canary.apps.cluster-2088.my-lab-173.example.com     |     200     |     edge    |
-|  alertmanager-main-openshift-monitoring.apps.cluster-2088.my-lab-173.example.com  |     403     |  reencrypt  |
-|       grafana-openshift-monitoring.apps.cluster-2088.my-lab-173.example.com       |     403     |  reencrypt  |
-|    prometheus-k8s-openshift-monitoring.apps.cluster-2088.my-lab-173.example.com   |     403     |  reencrypt  |
-|    thanos-querier-openshift-monitoring.apps.cluster-2088.my-lab-173.example.com   |     403     |  reencrypt  |
-|              jenkins-testing.apps.cluster-2088.my-lab-173.example.com             |     403     |     edge    |
-+-----------------------------------------------------------------------------------+-------------+-------------+
++----------------------------------------------------------------------------------+-------------+-------------+
+|                                      Route                                       | Status Code | Termination |
++----------------------------------------------------------------------------------+-------------+-------------+
+|             my-route-hello.apps.cluster-94cd.my-lab-1733.example.com             |     200     |     edge    |
+|     rails-postgresql-example-hello.apps.cluster-94cd.my-lab-1733.example.com     |     200     |     http    |
+|            oauth-openshift.apps.cluster-94cd.my-lab-1733.example.com             |     403     | passthrough |
+|       console-openshift-console.apps.cluster-94cd.my-lab-1733.example.com        |     200     |  reencrypt  |
+|      downloads-openshift-console.apps.cluster-94cd.my-lab-1733.example.com       |     200     |     edge    |
+|    canary-openshift-ingress-canary.apps.cluster-94cd.my-lab-1733.example.com     |     200     |     edge    |
+| alertmanager-main-openshift-monitoring.apps.cluster-94cd.my-lab-1733.example.com |     403     |  reencrypt  |
+|      grafana-openshift-monitoring.apps.cluster-94cd.my-lab-1733.example.com      |     403     |  reencrypt  |
+|  prometheus-k8s-openshift-monitoring.apps.cluster-94cd.my-lab-1733.example.com   |     403     |  reencrypt  |
+|  thanos-querier-openshift-monitoring.apps.cluster-94cd.my-lab-1733.example.com   |     403     |  reencrypt  |
++----------------------------------------------------------------------------------+-------------+-------------+
 
 Failed pods:
 
-+-----------+----------+--------+
-| Namespace | Pod name | Status |
-+-----------+----------+--------+
-+-----------+----------+--------+
++-----------+-----------------------------------+------------------+
+| Namespace |              Pod name             |      Status      |
++-----------+-----------------------------------+------------------+
+|  app-dev1 | nginx-deployment-66b6c48dd5-5q68z |      Error       |
+|  app-dev1 | nginx-deployment-66b6c48dd5-9j5rg | CrashLoopBackOff |
+|  app-dev1 | nginx-deployment-66b6c48dd5-c5nvz | CrashLoopBackOff |
++-----------+-----------------------------------+------------------+
 
-Number of failed pods:  0
+Number of failed pods:  2
 
+Cluster-admins  
  +--------------+-----------------------+
 |    Users     |         Groups        |
 +--------------+-----------------------+
 |     ogge     |     system:masters    |
-| system:admin | system:cluster-admins |
+| system:admin |    platform-admins    |
+|     ljkb     | system:cluster-admins |
 +--------------+-----------------------+
 
-There are: 2 cluster-admins in the cluster
+There are: 3 cluster-admins in the cluster
 
 Workload running longer than 9 days:
 
@@ -135,39 +138,55 @@ Workload running longer than 9 days:
 
 Number of old pods: 	 0
 
-ImageStreamTags over 10 per ImageStream
+ImageStreamTags over 10 per ImageStream 
 
  +-----------+-------------+----------------+
 | Namespace | ImageStream | Number of tags |
 +-----------+-------------+----------------+
 +-----------+-------------+----------------+
 
+Ingress certificate: OPENSHIFT GENERATED INGRESS CERTIFCATE IN USE: Please configure a custom certificate 
+
+ +---------------------------------------------+-----------------------------+---------------------+
+|                  Issued to                  |          Issued by          |   Expiration date   |
++---------------------------------------------+-----------------------------+---------------------+
+| *.apps.cluster-94cd.my-lab-1733.example.com | ingress-operator@1625737162 | 2023-07-08 09:40:46 |
++---------------------------------------------+-----------------------------+---------------------+ 
+
+Days until expiration:  728
+
 Node usage: 
 
-+-----------------------------------------------+------------------------------------+-------+------------+-----------+------------+
-|                   Node name                   |                Role                |  CPU  |   CPU %    |   Memory  |  Memory %  |
-+-----------------------------------------------+------------------------------------+-------+------------+-----------+------------+
-| ip-10-0-138-122.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] |  540m | ['29.90%'] | 4438512Ki | ['55.93%'] |
-| ip-10-0-147-178.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] | 1225m | ['26.45%'] | 9691876Ki | ['60.18%'] |
-|  ip-10-0-169-60.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] |  669m | ['16.28%'] | 5771496Ki | ['35.73%'] |
-| ip-10-0-170-162.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] |  309m | ['15.05%'] | 4536092Ki | ['57.63%'] |
-| ip-10-0-206-184.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] |  471m | ['11.15%'] | 4473244Ki | ['27.80%'] |
-|  ip-10-0-206-82.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] |  236m | ['4.55%']  | 1797892Ki | ['22.38%'] |
-+-----------------------------------------------+------------------------------------+-------+------------+-----------+------------+
++-----------------------------------------------+------------------------------------+------+------------+-----------+------------+
+|                   Node name                   |                Role                | CPU  |   CPU %    |   Memory  |  Memory %  |
++-----------------------------------------------+------------------------------------+------+------------+-----------+------------+
+| ip-10-0-139-241.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] | 704m | ['35.20%'] | 4574740Ki | ['58.28%'] |
+| ip-10-0-155-167.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] | 886m | ['22.15%'] | 8753700Ki | ['54.94%'] |
+|  ip-10-0-164-56.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] | 655m | ['16.38%'] | 7703820Ki | ['47.83%'] |
+|  ip-10-0-186-95.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] | 194m | ['9.70%']  | 2334268Ki | ['29.41%'] |
+| ip-10-0-214-241.eu-central-1.compute.internal | ['node-role.kubernetes.io/master'] | 830m | ['20.75%'] | 7935808Ki | ['49.27%'] |
+| ip-10-0-215-145.eu-central-1.compute.internal | ['node-role.kubernetes.io/worker'] | 736m | ['36.80%'] | 3522848Ki | ['44.39%'] |
++-----------------------------------------------+------------------------------------+------+------------+-----------+------------+
 
 Nodes in cluster:  6
 
- +-----------+-------------------------------------+
-| Namespace |               Pod name              |
-+-----------+-------------------------------------+
-|    lala   |   argocd-application-controller-0   |
-|    lala   |    argocd-redis-64689bc88d-q8ggt    |
-|    lala   | argocd-repo-server-74bbbf5c75-2hzb2 |
-|    lala   |    argocd-server-57bb7f557d-7xjxj   |
-+-----------+-------------------------------------+
+Pods without requests specifed: 
 
-Number of pods without requests specified:  4
+ +-----------+-----------------------------------+
+| Namespace |              Pod name             |
++-----------+-----------------------------------+
+|  app-dev1 | nginx-deployment-66b6c48dd5-5q68z |
+|  app-dev1 | nginx-deployment-66b6c48dd5-9j5rg |
+|  app-dev1 | nginx-deployment-66b6c48dd5-c5nvz |
+| app-test2 |    hello-node-6565c8c875-kjbnb    |
+|   hello   |        postgresql-1-deploy        |
+|   hello   |  rails-postgresql-example-1-build |
+|   hello   | rails-postgresql-example-1-deploy |
++-----------+-----------------------------------+
+
+Number of pods without requests specified:  7
 ════════════════════════════════════╣ Scan Complete ╠════════════════════════════════════
+
 
 ```
 

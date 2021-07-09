@@ -21,7 +21,7 @@ def check_routes(dyn_client):
     all_routes = get_all_routes(dyn_client)
     route_table = PrettyTable(['Route', 'Status Code', 'Termination'])
     checked_routes = {}
-    print("\nRoutes:\n")
+    print("\n\033[95mRoutes: \033[0m\n")
     for route, value in all_routes.items():
         with requests.Session() as session:
             if value is None:

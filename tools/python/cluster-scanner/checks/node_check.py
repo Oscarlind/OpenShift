@@ -15,7 +15,7 @@ def node_check(v1):
     mem = Percentage_calc(mem_check(v1), mem_cap(v1))
     mem.percentage()
   
-    print("\nNode usage: \n")
+    print("\033[95m\nNode usage: \033[0m\n")
     for node, v, v2 in zip(cluster_nodes['items'], cpu.percentage().values(), mem.percentage().values()):
         node_table.add_row([node['metadata']['name'], [string for string in node['metadata']['labels'] if "node-role.kubernetes" in string], node['usage']['cpu'], [v], node['usage']['memory'], [v2]])
     print(node_table)

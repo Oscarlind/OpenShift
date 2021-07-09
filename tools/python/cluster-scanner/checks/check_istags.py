@@ -22,6 +22,6 @@ def check_istags(dyn_client):
         else:
             istag_table.add_row([tag.metadata.namespace, tag.metadata.name, len(tag.status.tags)])
             tag_dict[tag.metadata.namespace].append(tag.metadata.name + " " + str(len(tag.status.tags)))
-    print("\nImageStreamTags over 10 per ImageStream")
+    print("\n\033[95mImageStreamTags over 10 per ImageStream \033[0m")
     print("\n", istag_table)
     return tag_dict

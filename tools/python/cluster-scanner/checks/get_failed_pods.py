@@ -24,7 +24,7 @@ def get_failed_pods(v1):
                 failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.phase)
                 failed_pods_table.add_row([pod.metadata.namespace, pod.metadata.name, pod.status.phase])
                 number_of_failed_pods +=1
-    print("\nFailed pods:\n")
+    print("\n\033[95mFailed pods:\n\033[0m")
     print(failed_pods_table)
     print("\nNumber of failed pods: ", number_of_failed_pods)
     return(failed_pods)

@@ -16,7 +16,7 @@ def check_requests(v1):
                 no_requests[i.metadata.namespace].append(i.metadata.name)
                 no_requests_counter += 1
     if no_requests_counter <= 50:
-        print("\nPods without requests specifed:")
+        print("\n\033[95mPods without requests specifed: \033[0m")
         print("\n",no_requests_table)
     else:
         print("\nLarge number of pods with no REQUEST set, assuming resource requests not widely used. - EXCLUDING TABLE")

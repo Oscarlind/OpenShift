@@ -19,7 +19,7 @@ def workload_age(v1):
                 if cut_off_date >= pod.metadata.creation_timestamp:
                     old_pods[pod.metadata.name] = pod.metadata.namespace
                     old_workload_table.add_row([pod.metadata.namespace, pod.metadata.name])
-    print("\nWorkload running longer than 9 days:\n")    
+    print("\n\033[95mWorkload running longer than 9 days:\033[0m\n")    
     print(old_workload_table)
     print("\nNumber of old pods: \t", (len(old_pods)))
     return old_pods

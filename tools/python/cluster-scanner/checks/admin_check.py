@@ -44,6 +44,6 @@ def admin_check(v1):
     for admin, admin_group in itertools.zip_longest(cluster_admin_users, cluster_admin_groups, fillvalue=' '):
             admin_table.add_row([admin, admin_group])
     admin_counter = len(cluster_admin_users)
-    print("\n",admin_table)
+    print("\n\033[95mCluster-admins \033[0m \n", admin_table)
     print("\nThere are:", admin_counter, "cluster-admins in the cluster")
     return cluster_admin_users

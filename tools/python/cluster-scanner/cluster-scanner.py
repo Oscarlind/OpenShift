@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+from kubernetes.client import api_client
+from kubernetes.config import kube_config
+from kubernetes.config.kube_config import KubeConfigLoader
 import openshift as oc
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
@@ -12,6 +15,7 @@ import checks.node_check as node_check
 import checks.workload_age  as workload_age
 import checks.check_istags as check_istags
 import checks.workload_requests as workload_requests
+import checks.ingress_cert_check as ingress_check
 
 
 def main():
@@ -25,6 +29,7 @@ def main():
         oc_version = dyn_client.resources.get(api_version='config.openshift.io/v1', kind='ClusterOperator')
     except Exception:
         is_ocp = False
+
 
     print('\033[1m' + '════════════════════════════════════╣ Starting Scan ╠════════════════════════════════════' + '\033[0m')
 
@@ -49,12 +54,14 @@ def main():
             admin_check.admin_check(v1)
             workload_age.workload_age(v1)
             check_istags.check_istags(dyn_client)
+            ingress_check.ingress_check(dyn_client)
             node_check.node_check(v1)
             workload_requests.check_requests(v1)
         except KeyboardInterrupt:
             print("\nUser interruption")
         
     print('\033[1m' + '════════════════════════════════════╣ Scan Complete ╠════════════════════════════════════' + '\033[0m')
+
 
 if __name__ == "__main__":
     main()
