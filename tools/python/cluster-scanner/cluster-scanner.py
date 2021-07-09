@@ -6,6 +6,7 @@ import openshift as oc
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
+import sys
 # The different checks
 import checks.admin_check as admin_check
 import checks.check_empty_namespaces as ns_check
@@ -21,6 +22,14 @@ import checks.ingress_cert_check as ingress_check
 def main():
     config.load_kube_config()
     k8s_client = config.new_client_from_config()
+    try:
+        k8s_version = client.VersionApi().get_code()
+    except ApiException as e:
+        if "Forbidden" or "Unauthorized" in e:
+            print("Forbidden, please log in to the cluster and ensure privileged permissions")
+            sys.exit(1)
+        else:
+            print(e)
     dyn_client = DynamicClient(k8s_client)
     v1=client.CoreV1Api()
     is_ocp = True
