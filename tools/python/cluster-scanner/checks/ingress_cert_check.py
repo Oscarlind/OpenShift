@@ -38,10 +38,10 @@ def ingress_check(dyn_client):
     v1_ingresses = client.AppsV1Api().list_namespaced_deployment(namespace='openshift-ingress')
     nr_of_ingress_controllers = 0
     for deployment in v1_ingresses.items:
-        if 'router' in deployment.metadata.name:
+        if 'router' in deployment.metadata.name and deployment.spec.replicas >= 1:
             nr_of_ingress_controllers +=1
     if nr_of_ingress_controllers >= 2:
-        print("Router-sharding detected, number of ingress controllers: ",nr_of_ingress_controllers)
+        print("\nRouter-sharding detected, number of ingress controllers: ",nr_of_ingress_controllers)
     else:
         pass
 
