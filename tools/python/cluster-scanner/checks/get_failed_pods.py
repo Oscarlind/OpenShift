@@ -12,7 +12,10 @@ def get_failed_pods(v1):
     for pod in response.items:
         failed_pods[pod.metadata.namespace] = []
     for pod in response.items:
-        if not pod.status.container_statuses[0].state.running and "Succeeded" not in pod.status.phase:
+        if not pod.status.container_statuses:
+            failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.phase)
+            failed_pods_table.add_row([pod.metadata.namespace, pod.metadata.name, pod.status.phase])
+        elif not pod.status.container_statuses[0].state.running and "Succeeded" not in pod.status.phase:
             if pod.status.container_statuses[0].state.waiting:
                 failed_pods[pod.metadata.namespace].append(pod.metadata.name + ": " + pod.status.container_statuses[0].state.waiting.reason)
                 failed_pods_table.add_row([pod.metadata.namespace, pod.metadata.name, pod.status.container_statuses[0].state.waiting.reason])
