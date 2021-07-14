@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 from kubernetes.client import api_client
 from kubernetes.config import kube_config
-from kubernetes.config.kube_config import KubeConfigLoader
 import openshift as oc
 from openshift.dynamic import DynamicClient
 from kubernetes import client, config
+from kubernetes.client import Configuration
 from kubernetes.client.rest import ApiException
 import sys
 # The different checks
